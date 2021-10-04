@@ -1,0 +1,8 @@
+<!DOCTYPE mapper PUBLIC "-//mapper.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jarvis.ws.medicine.repository.EnumsRepository">
+
+    <select id="listEnum" resultType="Map" parameterType="string">
+        SELECT "name" AS label FROM ${table}
+    </select>
+
+</mapper>

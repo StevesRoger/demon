@@ -1,0 +1,9 @@
+<!DOCTYPE mapper PUBLIC "-//mapper.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jarvis.ws.medicine.repository.SystemRepository">
+
+    <select id="getConfig" resultType="String">
+        SELECT sys_value FROM ph_sys_config
+        WHERE sys_key = #{key}
+    </select>
+
+</mapper>

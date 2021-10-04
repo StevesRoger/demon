@@ -1,0 +1,104 @@
+<!DOCTYPE mapper PUBLIC "-//mapper.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.jarvis.ws.medicine.ResultMapper">
+
+    <resultMap id="MedicineEntityResult" type="MedicineEntity">
+        <id property="id" column="product_id"/>
+        <result property="name" column="name"/>
+        <result property="nameKh" column="name_kh"/>
+        <result property="label" column="label"/>
+        <result property="brandName" column="brand"/>
+        <result property="country" column="country"/>
+        <result property="composition" column="composition"/>
+        <result property="status" column="status"/>
+        <result property="desc" column="desc"/>
+        <result property="unitPrice" column="unit_price"/>
+        <result property="unitType" column="unit_type"/>
+        <result property="createdDate" column="created_date"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="modifiedDate" column="modified_date"/>
+        <result property="modifiedBy" column="modified_by"/>
+        <result property="deletedDate" column="deleted_date"/>
+        <association property="stock" resultMap="StockEntityResult"/>
+    </resultMap>
+
+    <resultMap id="StockEntityResult" type="StockEntity">
+        <result property="id" column="stock_id"/>
+        <result property="postQuantity" column="post_quantity"/>
+        <result property="preQuantity" column="pre_quantity"/>
+        <result property="remainingAlert" column="remaining_alert"/>
+        <result property="createdDate" column="cre_date"/>
+        <result property="createdBy" column="cre_by"/>
+        <result property="modifiedDate" column="mod_date"/>
+        <result property="modifiedBy" column="mod_by"/>
+        <result property="medicineId" column="product_id"/>
+    </resultMap>
+
+    <resultMap id="SupplyingEntityResult" type="SupplyingEntity">
+        <id property="id" column="id"/>
+        <result property="quantity" column="quantity"/>
+        <result property="unitPrice" column="unit_price"/>
+        <result property="expiryDate" column="expiry_date"/>
+        <result property="publishDate" column="publish_date"/>
+        <result property="createdDate" column="created_date"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="supplierId" column="supplier_id"/>
+        <result property="medicineId" column="product_id"/>
+    </resultMap>
+
+    <resultMap id="SharedMedicineEntityResult" type="SharedEntity">
+        <id property="id" column="id"/>
+        <result property="guestUserId" column="guest_user_id"/>
+        <result property="ownerUserId" column="owner_user_id"/>
+        <result property="scope" column="scope"/>
+        <association property="medicineEntity" resultMap="MedicineEntityResult"/>
+    </resultMap>
+
+    <resultMap id="MedicineAlertEntityResult" type="MedicineAlertEntity">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="nameKh" column="name_kh"/>
+        <result property="postQuantity" column="post_quantity"/>
+        <result property="preQuantity" column="pre_quantity"/>
+        <result property="remainingAlert" column="remaining_alert"/>
+        <result property="userId" column="user_id"/>
+    </resultMap>
+
+    <resultMap id="OrderEntityResult" type="OrderEntity">
+        <id property="id" column="id"/>
+        <result property="total" column="total_amount"/>
+        <result property="receive" column="receive_amount"/>
+        <result property="remaining" column="remaining_amount"/>
+        <result property="change" column="change"/>
+        <result property="createdDate" column="created_date"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="modifiedDate" column="modified_date"/>
+        <result property="modifiedBy" column="modified_by"/>
+        <result property="supplierId" column="supplier_id"/>
+        <result property="customerId" column="customer_id"/>
+        <result property="remark" column="remark"/>
+        <result property="referNo" column="refer_number"/>
+        <result property="currency" column="receive_currency"/>
+        <collection property="orderItem" column="id" javaType="ArrayList" ofType="MedicineOrderEntity" select="org.jarvis.ws.medicine.repository.OrderRepository.listOrderItem"/>
+    </resultMap>
+
+    <resultMap id="MedicineOrderEntityResult" type="MedicineOrderEntity">
+        <result property="id" column="med_id"/>
+        <result property="brand" column="brand"/>
+        <result property="label" column="label"/>
+        <result property="composition" column="composition"/>
+        <result property="medicineName" column="name"/>
+        <result property="medicineNameKh" column="name_kh"/>
+        <result property="unitType" column="unit_type"/>
+        <result property="quantity" column="quantity"/>
+        <result property="unitPrice" column="unit_price"/>
+        <result property="vat" column="vat"/>
+        <result property="discount" column="discount"/>
+        <result property="multiplyType" column="multiply_type"/>
+    </resultMap>
+
+    <resultMap id="MediaEntityResult" type="MediaEntity">
+        <association property="image" column="image_id" javaType="ImageEntity" select="org.jarvis.ws.medicine.repository.ImageRepository.getById"/>
+    </resultMap>
+
+</mapper>

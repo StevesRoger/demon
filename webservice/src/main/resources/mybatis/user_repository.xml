@@ -1,0 +1,13 @@
+<!DOCTYPE mapper PUBLIC "-//mapper.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jarvis.ws.medicine.repository.UserRepository">
+
+    <insert id="addUserMedicine">
+        INSERT INTO ph_user_product (product_id, user_id) VALUES (#{medicineId}, #{userId})
+    </insert>
+
+    <select id="getUserDeviceById" parameterType="int" resultType="Notification">
+        SELECT id, title, body, badge, created_date AS createdDate
+        FROM ph_fcm_message ORDER BY id DESC LIMIT #{limit} OFFSET #{page}
+    </select>
+
+</mapper>

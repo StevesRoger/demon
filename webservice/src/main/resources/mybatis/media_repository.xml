@@ -1,0 +1,58 @@
+<!DOCTYPE mapper PUBLIC "-//mapper.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jarvis.ws.medicine.repository.MediaRepository">
+
+    <insert id="addMedia" parameterType="Map" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO ph_media (title, link, status, created_by, "type", image_id, height, width, background_color)
+        VALUES (#{title} ,#{link}, 'active', #{username}, #{type}, #{image.id}, #{width}, #{height}, #{backgroundColor})
+    </insert>
+
+    <select id="getById" resultMap="org.jarvis.ws.medicine.ResultMapper.MediaEntityResult">
+        SELECT media.*,mine_type,path,bytes,url FROM ph_media AS media
+        INNER JOIN ph_image AS image ON media.image_id = image.id
+        WHERE status = 'active' AND media.id = #{id} AND "type" = #{type}
+    </select>
+
+    <select id="listMedia" resultMap="org.jarvis.ws.medicine.ResultMapper.MediaEntityResult" parameterType="Map">
+        SELECT media.*,mine_type,path,bytes,url FROM ph_media AS media
+        INNER JOIN ph_image AS image ON media.image_id = image.id
+        WHERE status = 'active'
+        AND type = #{type}
+        ORDER BY created_date DESC
+        <if test="limit != null">
+            LIMIT #{limit}
+        </if>
+        <if test="offset != null">
+            OFFSET #{offset}
+        </if>
+    </select>
+
+    <update id="deleteMedia">
+        UPDATE ph_media SET status = 'inactive' WHERE id = #{id} AND status != 'inactive'
+    </update>
+
+    <select id="totalMedia" resultType="int">
+        SELECT COUNT(id) FROM ph_media WHERE status = 'active'
+    </select>
+
+    <insert id="saveMedia" parameterType="int">
+        INSERT INTO ph_user_media (user_id, media_id)
+        VALUES (#{userId} ,#{mediaId})
+        ON CONFLICT (user_id, media_id) DO NOTHING
+    </insert>
+
+    <select id="listSavedMedia" resultMap="org.jarvis.ws.medicine.ResultMapper.MediaEntityResult" parameterType="int">
+        SELECT media.*,mine_type,path,bytes,url FROM ph_media AS media
+        INNER JOIN ph_image AS image ON media.image_id = image.id
+        INNER JOIN ph_user_media AS usr ON media.id = usr.media_id
+        WHERE user_id = #{userId} AND status = 'active'
+    </select>
+
+    <delete id="deleteSavedMedia" parameterType="int">
+        DELETE FROM ph_user_media WHERE user_id = #{userId} AND media_id = #{mediaId}
+    </delete>
+
+    <select id="getSavedMedia" resultType="int" parameterType="int">
+        SELECT COUNT(*) FROM ph_user_media WHERE user_id = #{userId} AND media_id = #{mediaId}
+    </select>
+
+</mapper>

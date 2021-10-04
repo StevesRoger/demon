@@ -1,0 +1,48 @@
+<!DOCTYPE mapper PUBLIC "-//mapper.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jarvis.ws.medicine.repository.OrderRepository">
+
+    <insert id="createOrder" parameterType="Order" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO ph_order (total_amount, receive_amount, remaining_amount, change, created_by,
+        customer_id, user_id, status, remark, refer_number, receive_currency)
+        VALUES (#{totalAmount}, #{receiveAmount}, #{remainingAmount}, #{change}, #{username}, #{customerId}, #{userId},
+        #{status}, #{remark}, #{referNumber}, #{currency})
+    </insert>
+
+    <insert id="saveOrderItem">
+        INSERT INTO ph_product_order (product_id, order_id, quantity, unit_price, vat)
+        VALUES
+        <foreach collection="orderItems" item="item" index="index" separator=",">
+            (#{item.medicineId}, #{id}, #{item.quantity}, #{item.price}, #{item.vat})
+        </foreach>
+    </insert>
+
+    <select id="listOrder" parameterType="Map" resultMap="org.jarvis.ws.medicine.ResultMapper.OrderEntityResult">
+        SELECT * FROM ph_order WHERE user_id = #{userId}
+        <if test="startDate != null and endDate != null">
+            AND date_trunc('day',created_date) BETWEEN #{startDate} AND #{endDate}
+        </if>
+        ORDER BY created_date DESC
+        <if test="limit != null">
+            LIMIT #{limit}
+        </if>
+        <if test="offset != null">
+            OFFSET #{offset}
+        </if>
+    </select>
+
+    <select id="listOrderItem" parameterType="int"
+            resultMap="org.jarvis.ws.medicine.ResultMapper.MedicineOrderEntityResult">
+        SELECT med.id AS med_id,med.brand,med.label,med.composition,med.name,med.name_kh,med.unit_type,
+        ord.quantity,ord.unit_price,ord.vat,ord.discount,ord.multiply_type FROM ph_product_order AS ord
+        INNER JOIN ph_product AS med ON ord.product_id = med.id
+        WHERE order_id = #{id}
+    </select>
+
+    <select id="countOrder" resultType="int" parameterType="Map">
+        SELECT COUNT(id) FROM ph_order WHERE user_id = #{userId}
+        <if test="startDate != null and endDate != null">
+            AND date_trunc('day',created_date) BETWEEN #{startDate} AND #{endDate}
+        </if>
+    </select>
+
+</mapper>

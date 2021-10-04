@@ -1,0 +1,2 @@
+INSERT INTO otp_type VALUES('ACTIVATE','activation otp type') ON CONFLICT DO NOTHING
+INSERT INTO otp_type VALUES('FORGET_PASSWORD','forget password otp type') ON CONFLICT DO NOTHING

@@ -1,0 +1,24 @@
+<!DOCTYPE mapper PUBLIC "-//mapper.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jarvis.ws.medicine.repository.AuditTrailRepository">
+
+    <insert id="saveAuditTrail" parameterType="org.jarvis.core.model.audit.AuditTrail" useGeneratedKeys="true"
+            keyProperty="id" keyColumn="id">
+        INSERT INTO ph_audit_trail ("table_name", user_id, "action", entity_id)
+        VALUES (#{tableName}, #{userId}, #{action}, #{entityId})
+    </insert>
+
+    <insert id="saveAuditTrailValue" parameterType="org.jarvis.core.model.audit.AuditTrailValue">
+        INSERT INTO ph_audit_trail_value (audit_trail_id, "column_name", old_value, new_value)
+        VALUES (#{auditTrailId}, #{columnName}, #{oldValue}, #{newValue})
+    </insert>
+
+    <select id="listAuditTrailAction" resultType="org.jarvis.core.model.audit.AuditTrailAction">
+        SELECT * FROM ph_audit_trail_action
+    </select>
+
+    <select id="getAuditTrailAction" resultType="org.jarvis.core.model.audit.AuditTrailAction"
+            parameterType="java.lang.String">
+        SELECT * FROM ph_audit_trail_action WHERE "action" = #{action}
+    </select>
+
+</mapper>
