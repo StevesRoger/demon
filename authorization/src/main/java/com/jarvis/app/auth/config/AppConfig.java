@@ -1,19 +1,28 @@
 package com.jarvis.app.auth.config;
 
+import com.jarvis.app.auth.component.security.SocialMediaAuthenticationProvider;
 import com.jarvis.app.auth.component.security.UserTokenEnhanceDetails;
 import com.jarvis.app.auth.model.entity.UserAccount;
+import com.jarvis.app.auth.service.security.UserAccountDetailsService;
+import com.jarvis.app.auth.service.security.UserSocialMediaService;
 import com.jarvis.frmk.core.util.RSAUtil;
 import com.jarvis.frmk.hibernate.entity.ref.Status;
+import com.jarvis.frmk.security.JarvisDaoAuthenticationProvider;
 import com.jarvis.frmk.security.RSASecurityProvider;
 import com.jarvis.frmk.security.RsaBCryptPasswordEncoder;
 import com.jarvis.frmk.security.oauth2.token.JarvisTokenEnhancer;
-import com.jarvis.frmk.security.oauth2.token.store.JdbcEvictTokenStore;
+import com.jarvis.frmk.security.oauth2.token.UuidAuthenticationKeyGenerator;
+import com.jarvis.frmk.security.oauth2.token.store.JdbcInvalidateTokenStore;
+import com.jarvis.frmk.security.service.CompositeUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.core.GrantedAuthorityDefaults;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.provider.ClientDetailsService;
 import org.springframework.security.oauth2.provider.approval.ApprovalStore;
@@ -23,7 +32,7 @@ import org.springframework.security.oauth2.provider.client.JdbcClientDetailsServ
 import org.springframework.security.oauth2.provider.code.AuthorizationCodeServices;
 import org.springframework.security.oauth2.provider.code.JdbcAuthorizationCodeServices;
 import org.springframework.security.oauth2.provider.token.TokenEnhancer;
-import org.springframework.security.oauth2.provider.token.store.JdbcTokenStore;
+import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
@@ -32,6 +41,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * Created: KimChheng
@@ -43,13 +54,30 @@ import java.security.spec.InvalidKeySpecException;
 @EnableWebSecurity
 @EntityScan(basePackageClasses = {UserAccount.class, Status.class})
 @EnableTransactionManagement
-public class AppConfiguration {
+public class AppConfig {
 
     @Autowired
     private DataSource dataSource;
 
     @Autowired
     private RSASecurityProvider rsaProvider;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private ClientDetailsUserDetailsService clientDetailService;
+
+    @Autowired
+    private UserAccountDetailsService userDetailService;
+
+    @Autowired
+    private UserSocialMediaService socialMediaService;
+
+    @Bean
+    public GrantedAuthorityDefaults grantedAuthorityDefaults() {
+        return new GrantedAuthorityDefaults("");
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -60,10 +88,11 @@ public class AppConfiguration {
     }
 
     @Bean
-    public JdbcTokenStore tokenStore() {
-        return new JdbcEvictTokenStore(dataSource);
+    public TokenStore tokenStore() {
+        JdbcInvalidateTokenStore tokenStore = new JdbcInvalidateTokenStore(dataSource);
+        tokenStore.setAuthenticationKeyGenerator(new UuidAuthenticationKeyGenerator());
+        return tokenStore;
     }
-
 
     @Bean
     public ClientDetailsService jdbcClientDetailsService() {
@@ -88,11 +117,11 @@ public class AppConfiguration {
     }
 
     @Bean
-    public TokenEnhancer tokenEnhancer(UserTokenEnhanceDetails enhanceDetails) {
-        JarvisTokenEnhancer enhancer = new JarvisTokenEnhancer();
-        enhancer.setExpiresDate(true);
-        enhancer.setRefreshExpiresDate(true);
-        enhancer.setEnhanceDetails(enhanceDetails);
+    public TokenEnhancer tokenEnhancer() {
+        JarvisTokenEnhancer enhancer = new UserTokenEnhanceDetails();
+        enhancer.includeAccessExpiry(true);
+        enhancer.includeRefreshExpiry(true);
+        enhancer.includeIssuedAt(true);
         return enhancer;
     }
 
@@ -101,5 +130,17 @@ public class AppConfiguration {
         PrivateKey privateKey = RSAUtil.readPrivateKey(getClass().getResourceAsStream("/rsa-key/private-key.pem"));
         PublicKey publicKey = RSAUtil.readPublicKey(getClass().getResourceAsStream("/rsa-key/public-key.pem"));
         return new RSASecurityProvider(privateKey, publicKey);
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager() {
+        SocialMediaAuthenticationProvider socialMediaProvider = new SocialMediaAuthenticationProvider();
+        socialMediaProvider.setSocialMediaService(socialMediaService);
+        socialMediaProvider.setHideUserNotFoundExceptions(false);
+        JarvisDaoAuthenticationProvider provider = new JarvisDaoAuthenticationProvider();
+        provider.setUserDetailsService(new CompositeUserDetailsService(Arrays.asList(clientDetailService, userDetailService)));
+        provider.setPasswordEncoder(passwordEncoder);
+        provider.setHideUserNotFoundExceptions(false);
+        return new ProviderManager(Collections.unmodifiableList(Arrays.asList(socialMediaProvider, provider)));
     }
 }

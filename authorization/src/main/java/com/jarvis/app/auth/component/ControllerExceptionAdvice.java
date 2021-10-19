@@ -10,7 +10,7 @@ import com.jarvis.frmk.core.log.LoggerJ;
 import com.jarvis.frmk.core.model.http.response.ResponseJEntity;
 import com.jarvis.frmk.security.ISecurity;
 import com.jarvis.frmk.security.exception.AnyAuthenticationException;
-import com.jarvis.frmk.security.exception.UserAccountAuthenticationException;
+import com.jarvis.frmk.security.exception.UserAccountException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  */
 
 @RestControllerAdvice(basePackageClasses = {UserController.class})
-public class ResponseExceptionHandler extends AbstractControllerAdviceHandler {
+public class ControllerExceptionAdvice extends AbstractControllerAdviceHandler {
 
     @LogSlf4j
     private LoggerJ log;
@@ -50,8 +50,8 @@ public class ResponseExceptionHandler extends AbstractControllerAdviceHandler {
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<?> handleAuthenticationException(AuthenticationException ex) {
         log.error(ex.getMessage());
-        if (ex instanceof UserAccountAuthenticationException)
-            return ((UserAccountAuthenticationException) ex).getResponse().toResponseEntity();
+        if (ex instanceof UserAccountException)
+            return ((UserAccountException) ex).getResponse().toResponseEntity();
         return ResponseJEntity.fail(ISecurity.I18N_MESSAGE.getMessage("security.bad.credential"), HttpStatus.UNAUTHORIZED, ex.getMessage()).toResponseEntity();
     }
 
@@ -62,6 +62,8 @@ public class ResponseExceptionHandler extends AbstractControllerAdviceHandler {
             message = I18N.getMessage("error.token.expired");
         else if (error.contains("Invalid refresh token"))
             message = I18N.getMessage("error.invalid.refresh.token");
+        else if (error.contains("User account is locked"))
+            message = I18N.getMessage("error.user.locked");
         return buildResponse(ex.getMessage(), message, HttpStatus.UNAUTHORIZED).code("OA2400").toResponseEntity();
     }
 }

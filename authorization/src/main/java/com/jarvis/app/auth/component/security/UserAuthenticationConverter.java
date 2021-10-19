@@ -1,12 +1,10 @@
 package com.jarvis.app.auth.component.security;
 
 import com.jarvis.app.auth.model.entity.UserAccount;
-import com.jarvis.app.auth.model.entity.UserDevice;
 import com.jarvis.app.auth.model.entity.UserPersonalInfo;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.provider.token.DefaultUserAuthenticationConverter;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -25,14 +23,14 @@ public class UserAuthenticationConverter extends DefaultUserAuthenticationConver
         response.put("last_name", personalInfo.getLastName());
         response.put("primary_phone", personalInfo.getPrimaryPhone());
         response.put("dob", personalInfo.getDob());
-        response.put("device", deviceInfo(userAccount));
+        //response.put("device", deviceInfo(userAccount));
         return response;
     }
 
-    private Map<String, Object> deviceInfo(UserAccount userAccount) {
+    /*private Map<String, Object> deviceInfo(UserAccount userAccount) {
         UserDevice userDevice = userAccount.getUserDevice();
         Map<String, Object> map = new HashMap<>();
-        if (userDevice != null) {
+       if (userDevice != null) {
             map.put("id", userDevice.getId());
             map.put("device_id", userDevice.getId());
             map.put("fcm_token", userDevice.getToken());
@@ -41,5 +39,5 @@ public class UserAuthenticationConverter extends DefaultUserAuthenticationConver
             map.put("model", userDevice.getModel());
         }
         return map;
-    }
+    }*/
 }

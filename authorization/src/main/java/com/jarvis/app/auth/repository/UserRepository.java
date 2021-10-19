@@ -2,6 +2,7 @@ package com.jarvis.app.auth.repository;
 
 import com.jarvis.app.auth.model.entity.PasswordPolicy;
 import com.jarvis.app.auth.model.entity.UserAccount;
+import com.jarvis.app.auth.model.entity.UserRole;
 import com.jarvis.frmk.core.IRegex;
 import com.jarvis.frmk.core.annotation.LogSlf4j;
 import com.jarvis.frmk.core.exception.FatalException;
@@ -9,6 +10,7 @@ import com.jarvis.frmk.core.log.LoggerJ;
 import com.jarvis.frmk.core.util.StringUtil;
 import com.jarvis.frmk.hibernate.criterion.Conditions;
 import com.jarvis.frmk.hibernate.criterion.JCriteria;
+import com.jarvis.frmk.hibernate.entity.ref.AuthType;
 import com.jarvis.frmk.hibernate.entity.ref.Status;
 import com.jarvis.frmk.hibernate.repository.impl.AbstractEntityRepository;
 import org.springframework.stereotype.Repository;
@@ -33,25 +35,48 @@ public class UserRepository extends AbstractEntityRepository {
     }
 
     public Optional<UserAccount> findByEmail(String email) {
+        return findByEmailAndType(email, AuthType.ACCOUNT);
+    }
+
+    public Optional<UserAccount> findByEmailAndType(String email, AuthType authType) {
         if (StringUtil.isEmpty(email) || !IRegex.isValidEmailAddress(email))
             throw FatalException.i18n("error.invalid.email", "Invalid email");
         log.info("find user account by email {}", email);
         JCriteria<UserAccount> criteria = new JCriteria<>(UserAccount.class);
-        criteria.join("personalInfo");
-        criteria.condition(Conditions.equal("personalInfo.email", email));
+        criteria.join("personalInfo", "info");
+        criteria.condition(Conditions.equal("info.email", email));
         criteria.condition(Conditions.in("status", Status.ACTIVE, Status.SUSPENDED));
-        List<UserAccount> userAccounts = list(criteria);
-        return userAccounts.isEmpty() ? Optional.empty() : Optional.of(userAccounts.get(0));
+        if (authType != null) {
+            log.info("auth type {}", authType);
+            criteria.condition(Conditions.equal("authType", authType));
+        }
+        List<UserAccount> list = list(criteria);
+        return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0));
     }
 
     public Optional<UserAccount> findByUserName(String username) {
-        UserAccount userAccount = getEntityByConditions(UserAccount.class,
-                Conditions.equal("username", username),
-                Conditions.in("status", Status.ACTIVE, Status.SUSPENDED));
-        return Optional.ofNullable(userAccount);
+        return findByUserNameAndType(username, AuthType.ACCOUNT);
     }
 
-    public PasswordPolicy findPwdPolicyById(String id) {
-        return getEntityById(PasswordPolicy.class, id);
+    public Optional<UserAccount> findByUserNameAndType(String username, AuthType authType) {
+        log.info("find user account by username {}", username);
+        JCriteria<UserAccount> criteria = new JCriteria<>(UserAccount.class);
+        criteria.condition(Conditions.equal("username", username));
+        criteria.condition(Conditions.in("status", Status.ACTIVE, Status.SUSPENDED));
+        if (authType != null) {
+            log.info("auth type {}", authType);
+            criteria.condition(Conditions.equal("authType", authType));
+        }
+        List<UserAccount> list = list(criteria);
+        return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0));
+    }
+
+    public Optional<PasswordPolicy> findPwdPolicyById(String id) {
+        return Optional.ofNullable(getEntityById(PasswordPolicy.class, id));
+    }
+
+    public Optional<UserRole> findUserRoleByIdOrRole(Integer id, String role) {
+        UserRole userRole = id != null ? getEntityById(UserRole.class, id) : getEntityByProperty(UserRole.class, "role", role);
+        return Optional.ofNullable(userRole);
     }
 }

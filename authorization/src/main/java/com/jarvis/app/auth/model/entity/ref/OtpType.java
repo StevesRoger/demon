@@ -16,10 +16,7 @@ public class OtpType extends EntityRef<String> {
 
     public static final OtpType ACTIVATE = new OtpType("ACTIVATE", "activation otp type");
     public static final OtpType FORGET_PASSWORD = new OtpType("FORGET_PASSWORD", "forget password otp type");
-
-    public OtpType() {
-    }
-
+    
     public OtpType(String id, String description) {
         super(id, description);
     }

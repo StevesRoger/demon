@@ -1,8 +1,8 @@
 package com.jarvis.app.auth.model.response;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.jarvis.app.auth.model.entity.ref.AuthType;
-import com.jarvis.app.auth.model.request.RegisterDevice;
+import com.jarvis.app.auth.model.entity.UserDevice;
+import com.jarvis.frmk.core.model.JsonSnakeCase;
+import com.jarvis.frmk.hibernate.entity.ref.AuthType;
 import org.json.JSONObject;
 
 /**
@@ -10,19 +10,17 @@ import org.json.JSONObject;
  * Date: 23-Dec-2020 Wed
  * Time: 10:28 AM
  */
-public class Facebook implements ThirdPartyUserAccount {
+public class Facebook implements SocialMediaUserDetails, JsonSnakeCase {
 
     private static final long serialVersionUID = -8583737155882053708L;
 
     private String id;
     private String email;
-    @JsonProperty("first_name")
     private String firstName;
-    @JsonProperty("last_name")
     private String lastName;
     private JSONObject picture;
     private String password;
-    private RegisterDevice device;
+    private UserDevice device;
 
     public String getId() {
         return id;
@@ -38,7 +36,7 @@ public class Facebook implements ThirdPartyUserAccount {
     }
 
     @Override
-    public AuthType getAuthType() {
+    public AuthType getType() {
         return AuthType.FACEBOOK;
     }
 
@@ -48,7 +46,7 @@ public class Facebook implements ThirdPartyUserAccount {
     }
 
     @Override
-    public RegisterDevice getDevice() {
+    public UserDevice getDevice() {
         return device;
     }
 
@@ -56,12 +54,17 @@ public class Facebook implements ThirdPartyUserAccount {
         this.password = password;
     }
 
-    public void setDevice(RegisterDevice device) {
+    public void setDevice(UserDevice device) {
         this.device = device;
     }
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    @Override
+    public String getFullName() {
+        return null;
     }
 
     @Override
@@ -89,4 +92,5 @@ public class Facebook implements ThirdPartyUserAccount {
     public void setPicture(JSONObject picture) {
         this.picture = picture;
     }
+
 }

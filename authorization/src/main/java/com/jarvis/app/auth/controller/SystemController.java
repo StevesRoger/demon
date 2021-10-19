@@ -19,6 +19,7 @@ import javax.validation.Valid;
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping(value = "/system", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -32,6 +33,11 @@ public class SystemController {
 
     @Autowired
     private UserService userService;
+
+    /*@PutMapping(value = "/user", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseJEntity updateUser() {
+
+    }*/
 
     @PostMapping("/encrypt")
     public ResponseJEntity encryptRSAPassword(@RequestParam("pwd") String rawPassword) throws Exception {
@@ -49,14 +55,14 @@ public class SystemController {
 
     @DeleteMapping("/revoke-token")
     public ResponseJEntity revokeToken(@RequestParam("token") String token) {
-        OAuth2AccessToken auth = auth2Service.revokeToken(token);
+        Optional<OAuth2AccessToken> auth = auth2Service.revokeToken(token);
         return ResponseJEntity.ok(I18N.getMessage(auth == null ? "error.token.not.found" : "successful"), auth);
     }
 
-    @GetMapping(value = "/user")
+    /*@GetMapping(value = "/user")
     public ResponseJEntity getUserById(@RequestParam(value = "id", required = false) Integer userId) {
         return userService.getUserById(userId);
-    }
+    }*/
 
     @GetMapping("/test")
     public ResponseJEntity test(@RequestBody @Valid Map map) throws GeneralSecurityException, UnsupportedEncodingException {

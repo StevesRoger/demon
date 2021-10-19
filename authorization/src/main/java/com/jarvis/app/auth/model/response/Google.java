@@ -1,16 +1,15 @@
 package com.jarvis.app.auth.model.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.jarvis.app.auth.model.entity.ref.AuthType;
-import com.jarvis.app.auth.model.request.RegisterDevice;
-import com.jarvis.frmk.core.model.base.SerializeCloneable;
+import com.jarvis.app.auth.model.entity.UserDevice;
+import com.jarvis.frmk.hibernate.entity.ref.AuthType;
 
 /**
  * Created: KimChheng
  * Date: 23-Dec-2020 Wed
  * Time: 9:07 PM
  */
-public class Google implements SerializeCloneable, ThirdPartyUserAccount {
+public class Google implements SocialMediaUserDetails {
 
     private static final long serialVersionUID = -5448546661305335260L;
 
@@ -24,7 +23,7 @@ public class Google implements SerializeCloneable, ThirdPartyUserAccount {
     private String email;
     private String picture;
     private String password;
-    private RegisterDevice device;
+    private UserDevice device;
 
     public String getId() {
         return id;
@@ -63,6 +62,11 @@ public class Google implements SerializeCloneable, ThirdPartyUserAccount {
     }
 
     @Override
+    public String getFullName() {
+        return name;
+    }
+
+    @Override
     public String getFirstName() {
         return firstName;
     }
@@ -78,7 +82,7 @@ public class Google implements SerializeCloneable, ThirdPartyUserAccount {
     }
 
     @Override
-    public AuthType getAuthType() {
+    public AuthType getType() {
         return AuthType.GOOGLE;
     }
 
@@ -88,7 +92,7 @@ public class Google implements SerializeCloneable, ThirdPartyUserAccount {
     }
 
     @Override
-    public RegisterDevice getDevice() {
+    public UserDevice getDevice() {
         return device;
     }
 
@@ -96,7 +100,7 @@ public class Google implements SerializeCloneable, ThirdPartyUserAccount {
         this.password = password;
     }
 
-    public void setDevice(RegisterDevice device) {
+    public void setDevice(UserDevice device) {
         this.device = device;
     }
 

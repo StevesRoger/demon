@@ -1,22 +1,19 @@
 package com.jarvis.app.auth.model.request;
 
 import com.jarvis.frmk.core.model.base.SerializeCloneable;
-import io.swagger.annotations.ApiModel;
-
-import javax.validation.constraints.NotEmpty;
 
 /**
  * Created: KimChheng
- * Date: 06-Jun-2020 Sat
- * Time: 10:39
+ * Date: 13-Oct-2019 Sun
+ * Time: 10:29 PM
  */
-@ApiModel
-public class ActivateRequest implements SerializeCloneable {
 
-    private static final long serialVersionUID = 3263760847779440187L;
-    @NotEmpty
+public class RestPassword implements SerializeCloneable {
+
+    private static final long serialVersionUID = -7420323539395067333L;
+
+    private String newPassword;
     private String otpCode;
-    @NotEmpty
     private String otpRefer;
 
     public String getOtpCode() {
@@ -25,6 +22,14 @@ public class ActivateRequest implements SerializeCloneable {
 
     public void setOtpCode(String otpCode) {
         this.otpCode = otpCode;
+    }
+
+    public String getNewPassword() {
+        return newPassword;
+    }
+
+    public void setNewPassword(String newPassword) {
+        this.newPassword = newPassword;
     }
 
     public String getOtpRefer() {

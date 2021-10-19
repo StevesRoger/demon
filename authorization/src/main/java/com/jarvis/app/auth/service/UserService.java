@@ -1,35 +1,40 @@
 package com.jarvis.app.auth.service;
 
-import com.jarvis.app.auth.Consts;
+import com.jarvis.app.auth.component.Consts;
 import com.jarvis.app.auth.helper.ValidationHelper;
 import com.jarvis.app.auth.model.entity.*;
 import com.jarvis.app.auth.model.entity.ref.OtpType;
 import com.jarvis.app.auth.model.request.*;
+import com.jarvis.app.auth.model.response.AuthenticationAccessToken;
 import com.jarvis.app.auth.repository.UserRepository;
+import com.jarvis.app.auth.service.security.UserAccountDetailsService;
 import com.jarvis.frmk.core.I18N;
 import com.jarvis.frmk.core.annotation.LogSlf4j;
 import com.jarvis.frmk.core.exception.FatalException;
 import com.jarvis.frmk.core.log.LoggerJ;
 import com.jarvis.frmk.core.model.http.response.ResponseJEntity;
 import com.jarvis.frmk.core.service.ConfigService;
-import com.jarvis.frmk.core.util.ObjectUtil;
-import com.jarvis.frmk.hibernate.criterion.Conditions;
+import com.jarvis.frmk.core.util.DateUtil;
+import com.jarvis.frmk.core.util.StringUtil;
 import com.jarvis.frmk.hibernate.entity.ref.AuthType;
-import com.jarvis.frmk.hibernate.entity.ref.Status;
 import com.jarvis.frmk.security.RSASecurityProvider;
-import com.jarvis.frmk.security.exception.DeviceNotFoundException;
+import com.jarvis.frmk.security.exception.UserAccountNotActivateException;
+import com.jarvis.frmk.security.oauth2.IOAuth2;
+import com.jarvis.frmk.security.util.SecurityUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Created: kim chheng
@@ -44,7 +49,7 @@ public class UserService {
     private UserRepository repository;
 
     @Autowired
-    private OTPService otpService;
+    private OtpService otpService;
 
     @Autowired
     private RSASecurityProvider rsaSecurity;
@@ -56,7 +61,10 @@ public class UserService {
     private OAuth2Service auth2Service;
 
     @Autowired
-    private AuthenticationService authService;
+    private AuthenticationManager authManager;
+
+    @Autowired
+    private UserAccountDetailsService userDetailService;
 
     @Autowired
     private ConfigService sysConfig;
@@ -65,144 +73,143 @@ public class UserService {
     private LoggerJ log;
 
     @Transactional(rollbackFor = Exception.class)
-    public ResponseJEntity registerUser(RegisterUser registerUser) throws Exception {
+    public ResponseJEntity register(UserRegister request) throws Exception {
         log.info("register user");
-        log.infoNonNull("email:{}", registerUser.getEmail());
-        log.infoNonNull("user name:{}", registerUser.getUserName());
-        log.infoNonNull("first name:{}", registerUser.getFirstName());
-        log.infoNonNull("last name:{}", registerUser.getLastName());
-        log.infoNonNull("primary phone:{}", registerUser.getPrimaryPhone());
-        ValidationHelper.isEmailOrUsernameExist(registerUser);
-        String rawPwd = rsaSecurity.decryptText(registerUser.getPassword().trim());
-        PasswordPolicy pwdPolicy = repository.findPwdPolicyById(registerUser.getPwdPolicyId() != null ?
-                registerUser.getPwdPolicyId() :
-                sysConfig.getValue(Consts.SYS_DEFAULT_USER_PWD_POLICY)).isValid(rawPwd);
-        UserRole userRole = registerUser.getRoleId() != null ?
-                repository.getEntityById(UserRole.class, registerUser.getRoleId()) :
-                repository.getEntityByProperty(UserRole.class, "role", sysConfig.getValue(Consts.SYS_DEFAULT_USER_ROLE));
+        log.infoNonNull("email:{}", request.getEmail());
+        log.infoNonNull("user name:{}", request.getUserName());
+        log.infoNonNull("first name:{}", request.getFirstName());
+        log.infoNonNull("last name:{}", request.getLastName());
+        log.infoNonNull("primary phone:{}", request.getPrimaryPhone());
+        ValidationHelper.isEmailOrUsernameExist(request);
+        String rawPwd = rsaSecurity.decryptText(request.getPassword().trim());
+        String pwdPolicyId = StringUtil.isNotEmpty(request.getPwdPolicyId()) ? request.getPwdPolicyId() :
+                sysConfig.getValue(Consts.SYS_DEFAULT_USER_PWD_POLICY);
+        PasswordPolicy pwdPolicy = repository.findPwdPolicyById(pwdPolicyId)
+                .orElseThrow(() -> FatalException.i18n("pwd.policy.not.found", "error cannot find pwd policy"));
+        UserRole userRole = repository.findUserRoleByIdOrRole(request.getRoleId(), sysConfig.getValue(Consts.SYS_DEFAULT_USER_ROLE))
+                .orElseThrow(() -> FatalException.i18n("user.profile.not.found", "error cannot find user role"));
         UserAccount userAccount = new UserAccount();
+        request.createUserPersonalInfo(userAccount);
         userAccount.setAuthType(AuthType.ACCOUNT);
-        userAccount.setUsername(registerUser.getUserName());
+        userAccount.setUsername(request.getUserName());
         userAccount.setPassword(pwdEncoder.encode(rawPwd));
-        userAccount.setPersonalInfo(registerUser.personalInfo(userAccount));
-        userAccount.setUserDevice(registerUser.userDevice(userAccount));
-        userAccount.setPasswordPolicy(pwdPolicy);
-        userAccount.getRoles().add(userRole);
+        userAccount.setPasswordPolicy(pwdPolicy.isValid(rawPwd));
+        userAccount.addDevice(request.createUserDevice(userAccount));
+        userAccount.addRole(userRole);
         repository.save(userAccount);
-        Otp otp = otpService.sendOTP(userAccount, OtpType.ACTIVATE);
+        Otp otp = otpService.sendOtp(request.getEmail(), request.getFullName(), userAccount.getUsername(), OtpType.ACTIVATE);
         log.info("register user successful");
         log.info("user account id:{}", userAccount.getId());
         return ResponseJEntity.ok(I18N.getMessage("register.successful"))
-                .jsonObject("otp_refer", otp.getId())
+                .code(Consts.REQUIRE_ACTIVATE).jsonObject("otp_refer", otp.getId())
                 .put("validity", otp.getValidity())
                 .put("expiry_date", otp.getExpiryDate())
                 .build();
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public ResponseJEntity sendOTP(String email, OtpType type) {
-        UserAccount userAccount = ValidationHelper.validateUserAccount(email);
-        log.info("user account id:{}", userAccount.getId());
-        Otp otp = otpService.sendOTP(userAccount, type);
-        return ResponseJEntity.ok(I18N.getMessage("successful"))
-                .jsonObject("otp_refer", otp.getId())
-                .put("validity", otp.getValidity())
-                .put("expiry_date", otp.getExpiryDate())
-                .build();
+    public ResponseJEntity activate(String otpRefer, String otpCode) throws GeneralSecurityException, UnsupportedEncodingException {
+        log.info("activation user");
+        Otp otp = otpService.verify(otpRefer, otpCode, OtpType.ACTIVATE);
+        String username = new String(otp.getDetail());
+        UserAccount userAccount = repository.findByUserName(username).orElseThrow(() ->
+                new FatalException(I18N.getMessage("user.not.found", username)));
+        userAccount.setActivated(true);
+        userAccount.setEnabled(true);
+        return ResponseJEntity.ok(I18N.getMessage("successful"));
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    public ResponseJEntity verifyOTP(String otpRefer, String otpCode) throws GeneralSecurityException, UnsupportedEncodingException {
-        Otp otp = otpService.verify(otpRefer, otpCode);
-        if (OtpType.ACTIVATE.equals(otp.getType())) {
-            log.info("verify activation otp");
-            Integer userId = Integer.parseInt(new String(otp.getDetail()));
-            UserAccount userAccount = repository.getEntityById(UserAccount.class, userId);
-            userAccount.setActivated(true);
-            userAccount.setEnabled(true);
-        } else if (OtpType.FORGET_PASSWORD.equals(otp.getType())) {
-
+    public ResponseJEntity forgetPassword(ForgetPassword request) {
+        try {
+            log.info("forget password:{}", request.getUsername());
+            UserAccount userAccount = (UserAccount) userDetailService.loadUserByUsername(request.getUsername());
+            Otp otp = otpService.sendOtp(userAccount.getEmail(), userAccount.getFullName(), request.getUsername(), OtpType.FORGET_PASSWORD);
+            log.info("register user successful");
+            log.info("user account id:{}", userAccount.getId());
+            return ResponseJEntity.ok(I18N.getMessage("register.successful"))
+                    .jsonObject("otp_refer", otp.getId())
+                    .put("validity", otp.getValidity())
+                    .put("expiry_date", otp.getExpiryDate())
+                    .build();
+        } catch (UserAccountNotActivateException ex) {
+            return handleNotActivate((UserAccount) ex.getDetail());
         }
-        return ResponseJEntity.ok(I18N.getMessage("successful"));
     }
-
-    /*@Transactional(rollbackFor = Exception.class)
-    public ResponseJEntity resetPassword(RestPasswordRequest request) throws Exception {
-        log.info("rest password");
-        UserAccountOTP userAccountOTP = repository.getEntityByProperty(UserAccountOTP.class, "otpRefer", request.getOtpRefer());
-        Otp otp = repository.getEntityByProperty(Otp.class, "otpRefer", request.getOtpRefer());
-        if (userAccountOTP == null || otp == null)
-            throw new FatalException(I18N.getMessage("reset.password.fail"), "Reset password fail invalid otp reference");
-        if (!otp.getVerified())
-            throw new FatalException(I18N.getMessage("reset.password.fail"), "Reset password fail otp reference not yet verify");
-        if (!OTPType.RESET_PASSWORD.equals(otp.getType()))
-            throw new FatalException(I18N.getMessage("reset.password.fail"), "Reset password fail otp reference type not rest password");
-        UserAccount userAccount = userAccountOTP.getUserAccount();
-        if (userAccount == null || Status.INACTIVE.equals(userAccount.getStatus()))
-            throw new FatalException(I18N.getMessage("user.email.not.found"), "user account not found");
-        if (Status.SUSPENDED.equals(userAccount.getStatus()))
-            throw new FatalException(I18N.getMessage("user.account.suspended", "email", userAccount.getUsername()), "user account suspended");
-        userAccount.setPassword(pwdEncoder.encode(rsaSecurity.decryptText(request.getNewPassword())));
-        userAccountOTP.invalidateOtpRefer();
-        repository.saveOrUpdate(userAccountOTP);
-        return ResponseJEntity.ok(I18N.getMessage("successful"));
-    }*/
 
     @Transactional(rollbackFor = Exception.class)
-    public ResponseJEntity changePassword(ChangePasswordRequest request) throws Exception {
-        log.info("change password");
-        UserAccount userAccount = ValidationHelper.validateUserAccount(request.getEmail());
-        if (!userAccount.getActivated() || !Status.ACTIVE.equals(userAccount.getStatus()))
-            throw new FatalException(I18N.getMessage("user.not.activate"), "Change password fail user status " + userAccount.getStatus());
-        if (!pwdEncoder.matches(request.getCurrentPassword(), userAccount.getPassword()))
-            throw new FatalException(I18N.getMessage("current.password.mismatch"), "Change password fail old password mismatch");
-        if (pwdEncoder.matches(request.getNewPassword(), userAccount.getPassword()))
-            throw new FatalException(I18N.getMessage("error.new.password"), "New password cannot be the same as current password");
-        String newPassword = rsaSecurity.decryptText(request.getNewPassword());
-        userAccount.setPassword(pwdEncoder.encode(newPassword));
-        repository.saveOrUpdate(userAccount);
+    public ResponseJEntity resetPassword(RestPassword request) throws Exception {
+        log.info("rest password");
+        Otp otp = otpService.verify(request.getOtpRefer(), request.getOtpCode(), OtpType.FORGET_PASSWORD);
+        UserAccount userAccount = (UserAccount) userDetailService.loadUserByUsername(new String(otp.getDetail()));
+        userAccount.setPassword(pwdEncoder.encode(rsaSecurity.decryptText(request.getNewPassword())));
         return ResponseJEntity.ok(I18N.getMessage("successful"));
     }
 
-    public ResponseJEntity login(LoginRequest request) {
-        log.info("login user name:{}", request.getUsername());
-        PasswordGrant passwordGrant = new PasswordGrant(request);
-        UserAccount userAccount = authService.authenticate(request.getType(), passwordGrant);
-        UserDevice userDevice = userAccount.getUserDevice();
-        if (userDevice == null)
-            throw new DeviceNotFoundException(I18N.getMessage("user.device.not.found"), "User device not found");
-        log.info("user id:{}", userAccount.getId());
-        log.info("fcm token:{}", request.getDevice().getToken());
-        log.info("platform:{}", request.getDevice().getPlatform());
-        userDevice.setToken(request.getDevice().getToken());
-        userDevice.setPlatform(request.getDevice().getPlatform());
-        userDevice.setAppVersion(request.getDevice().getAppVersion());
-        userDevice.setId(request.getDevice().getId());
-        userDevice.setModel(request.getDevice().getModel());
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseJEntity changePassword(ChangePassword request) throws Exception {
+        log.info("change password");
+        UserAccount userAccount = (UserAccount) userDetailService.loadUserByUsername(request.getUsername());
+        if (!pwdEncoder.matches(request.getCurrentPassword(), userAccount.getPassword()))
+            throw FatalException.i18n("current.password.mismatch", "Change password fail old password mismatch");
+        if (pwdEncoder.matches(request.getNewPassword(), userAccount.getPassword()))
+            throw FatalException.i18n("error.new.password", "New password cannot be the same as current password");
+        userAccount.setPassword(pwdEncoder.encode(rsaSecurity.decryptText(request.getNewPassword())));
+        return ResponseJEntity.ok(I18N.getMessage("successful"));
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseJEntity login(Login request, String authorization) throws IOException, GeneralSecurityException {
+        try {
+            log.info("login user:{}", request.getUsername());
+            log.info("token:{}", request.getDevice().getToken());
+            log.info("platform:{}", request.getDevice().getPlatform());
+            String[] tokens = SecurityUtil.extractAndDecodeBasicHeader(authorization);
+            String secret = rsaSecurity.decryptText(tokens[1]);
+            AuthenticationAccessToken accessToken = (AuthenticationAccessToken) auth2Service.getAccessToken(request.passwordGrant(tokens[0], secret));
+            UserAccount userAccount = (UserAccount) accessToken.getPrincipal();
+            UserDevice device = userAccount.getDevice(request.getDevice().getId()).orElse(request.getDevice());
+            device.setId(request.getDevice().getId());
+            device.setPlatform(request.getDevice().getPlatform());
+            device.setToken(request.getDevice().getToken());
+            device.setModel(request.getDevice().getModel());
+            device.setAppVersion(request.getDevice().getAppVersion());
+            userAccount.addDevice(device);
+            userAccount.setLastLogin(new Date());
+            return ResponseJEntity.ok(I18N.getMessage("successful"), accessToken);
+        } catch (UserAccountNotActivateException ex) {
+            return handleNotActivate((UserAccount) ex.getDetail());
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseJEntity logout(String token) {
+        log.info("logout user revoke token:{}", token);
+        Optional<OAuth2AccessToken> otpAccessToken = auth2Service.revokeToken(token);
+        otpAccessToken.ifPresent((auth) -> {
+            UserAccount userAccount = (UserAccount) ((AuthenticationAccessToken) auth).getPrincipal();
+            userAccount.setLastLogout(new Date());
+        });
+        return otpAccessToken.isPresent() ? ResponseJEntity.ok(I18N.getMessage("successful")) :
+                ResponseJEntity.fail(I18N.getMessage("error.token.not.found"));
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseJEntity refreshToken(String token, String authorization) throws IOException, GeneralSecurityException {
+        log.info("refresh token:{}", token);
+        String[] tokens = SecurityUtil.extractAndDecodeBasicHeader(authorization);
+        String secret = rsaSecurity.decryptText(tokens[1]);
+        Map<String, String> parameter = new HashMap<>();
+        parameter.put(IOAuth2.CLIENT_ID, tokens[0]);
+        parameter.put(IOAuth2.CLIENT_SECRET, secret);
+        parameter.put(IOAuth2.GRANT_TYPE, IOAuth2.REFRESH_TOKEN);
+        parameter.put(IOAuth2.REFRESH_TOKEN, token);
+        AuthenticationAccessToken accessToken = (AuthenticationAccessToken) auth2Service.refreshToken(parameter);
+        UserAccount userAccount = (UserAccount) accessToken.getPrincipal();
         userAccount.setLastLogin(new Date());
-        repository.saveOrUpdate(userAccount);
-        OAuth2AccessToken accessToken = auth2Service.getAccessToken(passwordGrant);
         return ResponseJEntity.ok(I18N.getMessage("successful"), accessToken);
     }
 
-    @SuppressWarnings("unchecked")
-    public ResponseJEntity refreshToken(RefreshTokenRequest request) {
-        log.info("refresh token:{}", request.getRefreshToken());
-        return ResponseJEntity.ok(I18N.getMessage("successful"), auth2Service.refreshToken(request));
-    }
-
-    public ResponseJEntity logout(LogoutRequest request) {
-        log.info("logout user {}", request.getUsername());
-        UserAccount userAccount = authService.authenticate(request.getUsername());
-        List<OAuth2AccessToken> tokens = auth2Service.revokeUserToken(request.getClientId(), request.getUsername());
-        log.info(tokens.size() + " Tokens have been revoked");
-        userAccount.setLastLogout(new Date());
-        repository.saveOrUpdate(userAccount);
-        ResponseJEntity response = ResponseJEntity.ok(I18N.getMessage("successful"));
-        return tokens.isEmpty() ? response : response.jsonObject("token_revoked", tokens.size()).build();
-    }
-
-    public ResponseJEntity getUserById(Integer userId) {
+    /*public ResponseJEntity getUserById(Integer userId) {
         if (userId != null) {
             log.info("get user by id:{}", userId);
             UserAccount userAccount = repository.getEntityByConditions(UserAccount.class,
@@ -230,6 +237,16 @@ public class UserService {
         Map<String, Object> deviceMap = ObjectUtil.chooseField(userDevice, "id", "deviceId", "fcmToken", "platform", "model", "appVersion");
         userMap.put("device", deviceMap);
         return userMap;
-    }
+    }*/
 
+    private ResponseJEntity handleNotActivate(UserAccount userAccount) {
+        log.info("user not activation yet");
+        Otp otp = otpService.sendOtp(userAccount.getEmail(), userAccount.getFullName(), userAccount.getId().toString(), OtpType.ACTIVATE);
+        return ResponseJEntity.ok(I18N.getMessage("user.not.activate"))
+                .code(Consts.REQUIRE_ACTIVATE)
+                .jsonObject("otp_refer", otp.getId())
+                .put("expiry_time", otp.getValidity())
+                .put("expiry_date", DateUtil.format(otp.getExpiryDate()))
+                .build();
+    }
 }

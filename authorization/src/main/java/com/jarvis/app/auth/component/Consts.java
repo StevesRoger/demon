@@ -1,4 +1,4 @@
-package com.jarvis.app.auth;
+package com.jarvis.app.auth.component;
 
 public interface Consts {
 
@@ -11,4 +11,6 @@ public interface Consts {
     String SYS_DEFAULT_USER_ROLE = "default.user.role";
     String SYS_NON_REPLY_MAIL = "non.reply.mail";
     String INVALIDATE_OTP_REFER = "-VERIFIED";
+    //response code
+    String REQUIRE_ACTIVATE = "AT201";
 }

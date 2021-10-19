@@ -3,7 +3,7 @@ package com.jarvis.app.auth.model.entity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-import com.jarvis.frmk.hibernate.entity.base.AlphaEntity;
+import com.jarvis.frmk.hibernate.entity.audit.AuditAlphaEntity;
 
 import javax.persistence.*;
 
@@ -12,7 +12,7 @@ import javax.persistence.*;
 @JsonIdentityInfo(
         generator = ObjectIdGenerators.PropertyGenerator.class,
         property = "id")
-public class UserDevice extends AlphaEntity {
+public class UserDevice extends AuditAlphaEntity {
 
     private static final long serialVersionUID = 5175349634832631884L;
 
@@ -21,6 +21,13 @@ public class UserDevice extends AlphaEntity {
     private String model;
     private String platform;
     private transient UserAccount userAccount;
+
+    public UserDevice() {
+    }
+
+    public UserDevice(UserAccount userAccount) {
+        this.userAccount = userAccount;
+    }
 
     @JsonBackReference
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)

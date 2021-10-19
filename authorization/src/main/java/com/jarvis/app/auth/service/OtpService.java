@@ -1,14 +1,16 @@
 package com.jarvis.app.auth.service;
 
-import com.jarvis.app.auth.Consts;
+import com.jarvis.app.auth.component.Consts;
 import com.jarvis.app.auth.model.entity.Otp;
 import com.jarvis.app.auth.model.entity.UserAccount;
-import com.jarvis.app.auth.model.entity.UserPersonalInfo;
 import com.jarvis.app.auth.model.entity.ref.OtpType;
+import com.jarvis.app.auth.repository.UserRepository;
+import com.jarvis.frmk.core.I18N;
 import com.jarvis.frmk.core.ICore;
 import com.jarvis.frmk.core.annotation.LogSlf4j;
 import com.jarvis.frmk.core.exception.FatalException;
 import com.jarvis.frmk.core.log.LoggerJ;
+import com.jarvis.frmk.core.model.http.response.ResponseJEntity;
 import com.jarvis.frmk.core.service.ConfigService;
 import com.jarvis.frmk.core.util.AppContextUtil;
 import com.jarvis.frmk.core.util.DateUtil;
@@ -23,10 +25,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
 import java.util.Date;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
-public class OTPService {
+public class OtpService {
+
+    @Autowired
+    private UserRepository userRepo;
 
     @Autowired
     private EntityRepository repository;
@@ -49,11 +55,8 @@ public class OTPService {
     private static final String OTP_VALIDITY = "otp.validity.";
 
     @Transactional(rollbackFor = Exception.class)
-    public Otp sendOTP(UserAccount userAccount, OtpType otpType) {
+    public Otp sendOtp(String to, String fullName, String detail, OtpType otpType) {
         log.info("send otp");
-        UserPersonalInfo personalInfo = userAccount.getPersonalInfo();
-        String fullName = personalInfo.getFullName();
-        fullName = StringUtil.isNotEmpty(fullName) ? fullName : personalInfo.getFirstName() + " " + personalInfo.getLastName();
         String otpLength = sysConfig.getValue(Consts.SYS_OTP_LENGTH, "6");
         String characters = sysConfig.getValue(Consts.SYS_OTP_CHARACTERS, ICore.NUMBERS);
         String otpCode = StringUtil.random(Integer.parseInt(otpLength), characters);
@@ -64,14 +67,15 @@ public class OTPService {
         long expiryInMilliSecond = TimeUnit.MILLISECONDS.convert(validity, TimeUnit.MINUTES);
         Date expiryAfter = DateUtil.withoutMilliseconds(new Date(System.currentTimeMillis() + expiryInMilliSecond));
         Otp otp = new Otp();
-        otp.setDetail(userAccount.getId().toString().getBytes(ICore.CHARSET_UTF_8));
-        otp.setDestination(personalInfo.getEmail());
+        otp.setDestination(to);
         otp.setCode(isDevelop() ? otpCode : pwdEncoder.encode(otpCode));
         otp.setExpiryDate(expiryAfter);
         otp.setValidity(expiryInSecond);
         otp.setType(otpType);
+        if (StringUtil.isNotEmpty(detail))
+            otp.setDetail(detail.getBytes(ICore.CHARSET_UTF_8));
         repository.save(otp);
-        mailService.send(fullName, otp.getDestination(), otpCode);
+        mailService.send(fullName, to, otpCode);
         if (log.isDebugEnabled()) {
             log.debug("to:{}", otp.getDestination());
             log.debug("otp refer:{}", otp.getId());
@@ -83,7 +87,7 @@ public class OTPService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public Otp verify(String otpRefer, String otpCode) throws GeneralSecurityException, UnsupportedEncodingException {
+    public Otp verify(String otpRefer, String otpCode, OtpType otpType) throws GeneralSecurityException, UnsupportedEncodingException {
         log.info("verify otp");
         log.info("otp refer:" + otpRefer);
         String rawCode = rsaSecurity.decryptText(otpCode.trim());
@@ -92,6 +96,8 @@ public class OTPService {
             throw FatalException.i18n("error.invalid.otp", "invalid otp reference");
         if (!isMatch(rawCode, entity.getCode()))
             throw FatalException.i18n("error.invalid.otp", "otp code mismatch");
+        if (!otpType.equals(entity.getType()))
+            throw new FatalException(I18N.getMessage("error.invalid.otp.type", otpType.toString()), "invalid otp type");
         if (entity.isExpired())
             throw FatalException.i18n("error.otp.expired", "otp code expired");
         if (entity.getVerified())
@@ -99,6 +105,23 @@ public class OTPService {
         entity.setVerified(true);
         log.info("verify otp successful");
         return entity;
+    }
+
+
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseJEntity resendOtp(String otpRefer) {
+        log.info("resend otp previous ref {}", otpRefer);
+        Otp oldOtp = Optional.ofNullable(repository.getEntityById(Otp.class, otpRefer))
+                .orElseThrow(() -> FatalException.i18n("error.cannot.resend.otp", "invalid otp reference cannot resend otp"));
+        String username = new String(oldOtp.getDetail());
+        UserAccount userAccount = userRepo.findByUserName(username).orElseThrow(() ->
+                new FatalException(I18N.getMessage("user.not.found", username)));
+        Otp otp = sendOtp(oldOtp.getDestination(), userAccount.getFullName(), username, oldOtp.getType());
+        return ResponseJEntity.ok(I18N.getMessage("successful"))
+                .jsonObject("otp_refer", otp.getId())
+                .put("validity", otp.getValidity())
+                .put("expiry_date", otp.getExpiryDate())
+                .build();
     }
 
     private boolean isDevelop() {

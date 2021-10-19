@@ -7,6 +7,7 @@ import com.jarvis.app.auth.model.entity.UserPersonalInfo;
 import com.jarvis.frmk.core.ICore;
 import com.jarvis.frmk.core.annotation.ValidEmail;
 import com.jarvis.frmk.core.model.base.SerializeCloneable;
+import com.jarvis.frmk.core.util.StringUtil;
 
 import javax.validation.constraints.NotEmpty;
 import java.util.Date;
@@ -16,7 +17,7 @@ import java.util.Date;
  * Date: 13-Oct-2019 Sun
  * Time: 10:29 PM
  */
-public class RegisterUser implements SerializeCloneable {
+public class UserRegister implements SerializeCloneable {
 
     private static final long serialVersionUID = -8283860787575626748L;
 
@@ -31,11 +32,11 @@ public class RegisterUser implements SerializeCloneable {
     private String firstName;
     private String middleName;
     private String lastName;
-    @JsonFormat(pattern = "yyyy-MM-dd", timezone = ICore.ASIA_PHONE_PENH)
+    @JsonFormat(pattern = "dd-MM-yyyy", timezone = ICore.ASIA_PHONE_PENH)
     private Date dob;
     private String primaryPhone;
     private String secondaryPhone;
-    private RegisterDevice device;
+    private DeviceRegister device;
 
     public String getPassword() {
         return password;
@@ -78,7 +79,7 @@ public class RegisterUser implements SerializeCloneable {
     }
 
     public String getFullName() {
-        return fullName;
+        return StringUtil.isNotEmpty(fullName) ? fullName : firstName + " " + lastName;
     }
 
     public void setFullName(String fullName) {
@@ -133,11 +134,11 @@ public class RegisterUser implements SerializeCloneable {
         this.secondaryPhone = secondaryPhone;
     }
 
-    public RegisterDevice getDevice() {
+    public DeviceRegister getDevice() {
         return device;
     }
 
-    public void setDevice(RegisterDevice device) {
+    public void setDevice(DeviceRegister device) {
         this.device = device;
     }
 
@@ -146,16 +147,9 @@ public class RegisterUser implements SerializeCloneable {
         return userName;
     }
 
-    public UserDevice userDevice(UserAccount userAccount) {
-        UserDevice userDevice = device.toEntity();
-        userDevice.setUserAccount(userAccount);
-        return userDevice;
-    }
-
-    public UserPersonalInfo personalInfo(UserAccount userAccount) {
-        UserPersonalInfo info = new UserPersonalInfo();
-        info.setUserAccount(userAccount);
-        info.setFullName(fullName);
+    public UserPersonalInfo createUserPersonalInfo(UserAccount userAccount) {
+        UserPersonalInfo info = new UserPersonalInfo(userAccount);
+        info.setFullName(getFullName());
         info.setFirstName(firstName);
         info.setMiddleName(middleName);
         info.setLastName(lastName);
@@ -164,5 +158,15 @@ public class RegisterUser implements SerializeCloneable {
         info.setSecondaryPhone(secondaryPhone);
         info.setDob(dob);
         return info;
+    }
+
+    public UserDevice createUserDevice(UserAccount userAccount) {
+        UserDevice device = new UserDevice(userAccount);
+        device.setId(this.device.getId());
+        device.setAppVersion(this.device.getAppVersion());
+        device.setToken(this.device.getToken());
+        device.setModel(this.device.getModel());
+        device.setPlatform(this.device.getPlatform());
+        return device;
     }
 }

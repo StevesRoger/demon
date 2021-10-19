@@ -10,6 +10,5 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  * Time: 22:05
  */
 @RestControllerAdvice(basePackageClasses = {UserController.class})
-public class JarvisResponseBodyAdvice extends AbstractResponseBodyAdvice {
-
+public class ControllerResponseAdvice extends AbstractResponseBodyAdvice {
 }

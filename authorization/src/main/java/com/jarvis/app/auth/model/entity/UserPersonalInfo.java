@@ -30,6 +30,14 @@ public class UserPersonalInfo extends AutoGenerateEntity<Integer> {
     private Date dob;
     private transient UserAccount userAccount;
 
+    public UserPersonalInfo() {
+    }
+
+    public UserPersonalInfo(UserAccount userAccount) {
+        this.userAccount = userAccount;
+        this.userAccount.setPersonalInfo(this);
+    }
+
     @JsonBackReference
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")

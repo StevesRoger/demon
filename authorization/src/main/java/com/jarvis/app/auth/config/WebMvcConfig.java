@@ -2,7 +2,7 @@ package com.jarvis.app.auth.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
-import com.jarvis.frmk.core.component.WebMvcConfigurationAdapter;
+import com.jarvis.frmk.core.component.WebMvcConfigurerAware;
 import com.jarvis.frmk.core.jackson.Jackson2HttpMessageConverter;
 import com.jarvis.frmk.core.jackson.module.AliasFieldModule;
 import com.jarvis.frmk.core.jackson.module.JSONObjectModule;
@@ -22,7 +22,7 @@ import java.util.List;
  * Time: 10:04 PM
  */
 @Configuration
-public class WebMvcConfiguration implements WebMvcConfigurationAdapter {
+public class WebMvcConfig extends WebMvcConfigurerAware {
 
     @Autowired
     private EntityManagerFactory entityManagerFactory;
@@ -34,7 +34,7 @@ public class WebMvcConfiguration implements WebMvcConfigurationAdapter {
     public void addViewControllers(ViewControllerRegistry registry) {
         registry.addViewController("/").setViewName("index");
         registry.addViewController("/index").setViewName("index");
-        // registry.addViewController("/login").setViewName("login");
+        registry.addViewController("/login").setViewName("login");
         registry.addViewController("/403").setViewName("/error/403");
         registry.addViewController("/500").setViewName("/error/500");
         registry.addRedirectViewController("/swagger", "swagger-ui.html");
@@ -50,17 +50,7 @@ public class WebMvcConfiguration implements WebMvcConfigurationAdapter {
         mapper.registerModules(hibernate5Module, new AliasFieldModule());
         mapper.registerModule(new JSONObjectModule());
         converters.add(0, messageConverter);
-        /*for (HttpMessageConverter<?> converter : converters) {
-            if (converter instanceof MappingJackson2HttpMessageConverter) {
-                Hibernate5Module hibernate5Module = new Hibernate5Module(entityManagerFactory.unwrap(SessionFactory.class));
-                hibernate5Module.disable(Hibernate5Module.Feature.USE_TRANSIENT_ANNOTATION);
-                hibernate5Module.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
-                hibernate5Module.enable(Hibernate5Module.Feature.REPLACE_PERSISTENT_COLLECTIONS);
-                ObjectMapper mapper = ((MappingJackson2HttpMessageConverter) converter).getObjectMapper();
-                mapper.registerModules(hibernate5Module, new AliasFieldModule());
-                mapper.registerModule(new JSONObjectModule());
-            }
-        }*/
+        super.extendMessageConverters(converters);
     }
 
 

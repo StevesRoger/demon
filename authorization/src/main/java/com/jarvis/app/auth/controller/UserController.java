@@ -1,8 +1,7 @@
 package com.jarvis.app.auth.controller;
 
-import com.jarvis.app.auth.model.entity.ref.OtpType;
-import com.jarvis.app.auth.model.request.RegisterUser;
-import com.jarvis.app.auth.model.request.ForgetPassword;
+import com.jarvis.app.auth.model.request.*;
+import com.jarvis.app.auth.service.OtpService;
 import com.jarvis.app.auth.service.UserService;
 import com.jarvis.frmk.core.model.http.request.RequestPlain;
 import com.jarvis.frmk.core.model.http.response.ResponseJEntity;
@@ -24,43 +23,53 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @PostMapping(value = "/register")
-    public ResponseJEntity registerUser(@RequestBody @Valid RequestPlain<RegisterUser> request) throws Exception {
-        return userService.registerUser(request.getData());
+    @Autowired
+    private OtpService otpService;
+
+    @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseJEntity register(@RequestBody @Valid RequestPlain<UserRegister> request) throws Exception {
+        return userService.register(request.getData());
     }
 
-    @PostMapping(value = "/send-otp")
-    public ResponseJEntity sendOTP(@RequestParam("email") String email, @RequestParam("type") OtpType otpType) {
-        return userService.sendOTP(email, otpType);
+    @PutMapping(value = "/activate")
+    public ResponseJEntity activate(@RequestParam("otp_refer") String otpRefer, @RequestParam("otp_code") String otpCode) throws Exception {
+        return userService.activate(otpRefer, otpCode);
     }
 
-    @PostMapping(value = "/verify-otp")
-    public ResponseJEntity verifyOTP(@RequestParam("otp_refer") String otpRefer, @RequestParam("otp_code") String code) throws Exception {
-        return userService.verifyOTP(otpRefer, code);
+    @PostMapping(value = "/forget-password", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseJEntity forgetPassword(@RequestBody RequestPlain<ForgetPassword> request) {
+        return userService.forgetPassword(request.getData());
     }
 
-    @PostMapping(value = "/forget-password")
-    public ResponseJEntity resetPassword(@RequestBody ForgetPassword restPasswordRequest) throws Exception {
-        return userService.resetPassword(restPasswordRequest);
+    @PutMapping(value = "/reset-password", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseJEntity resetPassword(@RequestBody RequestPlain<RestPassword> request) throws Exception {
+        return userService.resetPassword(request.getData());
     }
 
-    @PostMapping(value = "/change-password")
-    public ResponseJEntity changePassword(@RequestBody ChangePasswordRequest request) throws Exception {
-        return userService.changePassword(request);
+    @PutMapping(value = "/change-password", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseJEntity changePassword(@RequestBody RequestPlain<ChangePassword> request) throws Exception {
+        return userService.changePassword(request.getData());
     }
 
-    @PostMapping(value = "/login")
-    public ResponseJEntity login(@RequestBody @Valid LoginRequest body) {
-        return userService.login(body);
+    @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseJEntity login(@RequestHeader("Authorization") String authorization,
+                                 @RequestBody @Valid RequestPlain<Login> request) throws Exception {
+        return userService.login(request.getData(), authorization);
     }
 
-    @PostMapping(value = "/logout")
-    public ResponseJEntity logout(@RequestBody @Valid LogoutRequest body) {
-        return userService.logout(body);
+    @PutMapping(value = "/logout")
+    public ResponseJEntity logout(@RequestParam("token") String token) {
+        return userService.logout(token);
     }
 
-    @PostMapping(value = "/refresh-token")
-    public ResponseJEntity refreshToken(@RequestBody @Valid RefreshTokenRequest request) {
-        return userService.refreshToken(request);
+    @PutMapping(value = "/refresh-token")
+    public ResponseJEntity refreshToken(@RequestHeader("Authorization") String authorization,
+                                        @RequestParam("token") String token) throws Exception {
+        return userService.refreshToken(token, authorization);
+    }
+
+    @PostMapping(value = "/resend-otp")
+    public ResponseJEntity resendOtp(@RequestParam("otp_refer") String otpRefer) {
+        return otpService.resendOtp(otpRefer);
     }
 }

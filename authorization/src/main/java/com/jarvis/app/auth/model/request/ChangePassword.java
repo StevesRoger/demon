@@ -7,19 +7,20 @@ import com.jarvis.frmk.core.model.base.SerializeCloneable;
  * Date: 13-Jun-2020 Sat
  * Time: 21:47
  */
-public class ChangePasswordRequest implements SerializeCloneable {
+public class ChangePassword implements SerializeCloneable {
 
     private static final long serialVersionUID = -3839342801487001824L;
-    private String email;
+
+    private String username;
     private String currentPassword;
     private String newPassword;
 
-    public String getEmail() {
-        return email;
+    public String getUsername() {
+        return username;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getCurrentPassword() {

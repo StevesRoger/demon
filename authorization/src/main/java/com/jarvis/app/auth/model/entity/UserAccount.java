@@ -42,8 +42,8 @@ public class UserAccount extends AuditAutoGenerateEntity<Integer> implements Rec
     private AuthType authType;
     private Status status;
     private UserPersonalInfo personalInfo;
-    private UserDevice userDevice;
     private PasswordPolicy passwordPolicy;
+    private Set<UserDevice> devices = new HashSet<>();
     private Set<UserRole> roles = new HashSet<>();
 
     @JsonManagedReference
@@ -56,14 +56,13 @@ public class UserAccount extends AuditAutoGenerateEntity<Integer> implements Rec
         this.personalInfo = personalInfo;
     }
 
-    @JsonManagedReference
-    @OneToOne(mappedBy = "userAccount", cascade = CascadeType.ALL)
-    public UserDevice getUserDevice() {
-        return userDevice;
+    @OneToMany(mappedBy = "userAccount", cascade = CascadeType.ALL)
+    public Set<UserDevice> getDevices() {
+        return devices == null ? new HashSet<>() : devices;
     }
 
-    public void setUserDevice(UserDevice userDevice) {
-        this.userDevice = userDevice;
+    public void setDevices(Set<UserDevice> devices) {
+        this.devices = devices;
     }
 
     @OneToOne(cascade = CascadeType.PERSIST)
@@ -110,7 +109,7 @@ public class UserAccount extends AuditAutoGenerateEntity<Integer> implements Rec
         this.roles = profiles;
     }
 
-    @Column(name = "username", nullable = false, length = 20)
+    @Column(name = "username", nullable = false, length = 100)
     @Override
     public String getUsername() {
         return username;
@@ -120,7 +119,7 @@ public class UserAccount extends AuditAutoGenerateEntity<Integer> implements Rec
         this.username = username;
     }
 
-    @Column(name = "password", nullable = false)
+    @Column(name = "password", nullable = false, columnDefinition = "TEXT")
     @Override
     public String getPassword() {
         return password;
@@ -227,9 +226,7 @@ public class UserAccount extends AuditAutoGenerateEntity<Integer> implements Rec
     @Transient
     @Override
     public boolean isCredentialsNonExpired() {
-        if (expiryPassword == null)
-            return true;
-        return expiryPassword.before(new Date());
+        return expiryPassword == null || expiryPassword.before(new Date());
     }
 
     @Transient
@@ -251,5 +248,57 @@ public class UserAccount extends AuditAutoGenerateEntity<Integer> implements Rec
     @Override
     public String toString() {
         return username;
+    }
+
+    @Transient
+    public String getFullName() {
+        return personalInfo.getFullName();
+    }
+
+    @Transient
+    public String getEmail() {
+        return personalInfo.getEmail();
+    }
+
+    public void setFirstName(String firstName) {
+        this.personalInfo.setFirstName(firstName);
+    }
+
+    public void setLastName(String lastName) {
+        this.personalInfo.setLastName(lastName);
+    }
+
+    public void setEmail(String email) {
+        this.personalInfo.setEmail(email);
+    }
+
+    @Transient
+    public Optional<UserRole> getRole(String name) {
+        for (UserRole role : roles) {
+            if (role.getRole().equals(name))
+                return Optional.of(role);
+        }
+        return Optional.empty();
+    }
+
+    public void addRole(UserRole role) {
+        if (role != null)
+            getRoles().add(role);
+    }
+
+    @Transient
+    public Optional<UserDevice> getDevice(String id) {
+        for (UserDevice device : devices) {
+            if (device.getId().equals(id))
+                return Optional.of(device);
+        }
+        return Optional.empty();
+    }
+
+    public void addDevice(UserDevice device) {
+        if (device != null) {
+            device.setUserAccount(this);
+            getDevices().add(device);
+        }
     }
 }

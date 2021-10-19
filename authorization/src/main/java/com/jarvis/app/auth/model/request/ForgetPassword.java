@@ -1,42 +1,37 @@
 package com.jarvis.app.auth.model.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.jarvis.frmk.core.ICore;
 import com.jarvis.frmk.core.model.base.SerializeCloneable;
 
-/**
- * Created: KimChheng
- * Date: 13-Oct-2019 Sun
- * Time: 10:29 PM
- */
+import java.util.Date;
 
+/**
+ * Created: chheng
+ * Date: 05-Oct-2021 Tue
+ * Time: 21:31
+ */
 public class ForgetPassword implements SerializeCloneable {
 
-    private static final long serialVersionUID = -7420323539395067333L;
+    private static final long serialVersionUID = -9062485763737169300L;
 
-    private String email;
-    private String newPassword;
-    private String otpRefer;
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = ICore.ASIA_PHONE_PENH)
+    private Date dob;
+    private String username;
 
-    public String getEmail() {
-        return email;
+    public Date getDob() {
+        return dob;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setDob(Date dob) {
+        this.dob = dob;
     }
 
-    public String getNewPassword() {
-        return newPassword;
+    public String getUsername() {
+        return username;
     }
 
-    public void setNewPassword(String newPassword) {
-        this.newPassword = newPassword;
-    }
-
-    public String getOtpRefer() {
-        return otpRefer;
-    }
-
-    public void setOtpRefer(String otpRefer) {
-        this.otpRefer = otpRefer;
+    public void setUsername(String username) {
+        this.username = username;
     }
 }

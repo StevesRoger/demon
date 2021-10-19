@@ -1,15 +1,17 @@
 package com.jarvis.app.auth.model.response;
 
-import com.jarvis.app.auth.model.entity.ref.AuthType;
-import com.jarvis.app.auth.model.request.RegisterDevice;
+import com.jarvis.app.auth.model.entity.UserDevice;
 import com.jarvis.frmk.core.model.base.SerializeCloneable;
+import com.jarvis.frmk.hibernate.entity.ref.AuthType;
 
 /**
  * Created: KimChheng
  * Date: 21-Mar-2021 Sun
  * Time: 3:45 PM
  */
-public interface ThirdPartyUserAccount extends SerializeCloneable {
+public interface SocialMediaUserDetails extends SerializeCloneable {
+
+    String getFullName();
 
     String getFirstName();
 
@@ -17,9 +19,9 @@ public interface ThirdPartyUserAccount extends SerializeCloneable {
 
     String getEmail();
 
-    AuthType getAuthType();
+    AuthType getType();
 
     String getPassword();
 
-    RegisterDevice getDevice();
+    UserDevice getDevice();
 }

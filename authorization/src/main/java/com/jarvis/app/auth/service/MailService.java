@@ -1,6 +1,6 @@
 package com.jarvis.app.auth.service;
 
-import com.jarvis.app.auth.Consts;
+import com.jarvis.app.auth.component.Consts;
 import com.jarvis.app.auth.model.MailMessage;
 import com.jarvis.frmk.core.ICore;
 import com.jarvis.frmk.core.annotation.LogSlf4j;
@@ -32,11 +32,10 @@ public class MailService {
     }
 
     @Async
-    public void send(String fullName, String destination, String code) {
-        log.info("send otp");
-        log.info("send to:{}", destination);
+    public void send(String username, String destination, String code) {
+        log.info("send mail to:{}", destination);
         String template = mailTemplate;
-        template = template.replace("{{username}}", fullName);
+        template = template.replace("{{username}}", username);
         template = template.replace("{{otpCode}}", code);
         asyncSendMail(new MailMessage(destination, Consts.SYS_NON_REPLY_MAIL, "OTP code", template));
     }
