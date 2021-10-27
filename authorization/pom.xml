@@ -5,11 +5,11 @@
 
     <parent>
         <groupId>com.demon.app</groupId>
-        <artifactId>demon-app</artifactId>
+        <artifactId>demon</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>demon-authorization</artifactId>
+    <artifactId>authorization</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>Authorization</name>
     <description>Authorization Service</description>

@@ -1,10 +1,9 @@
 package com.jarvis.app.auth.component.security;
 
-import com.jarvis.app.auth.model.entity.UserAccount;
-import com.jarvis.app.auth.model.entity.UserDevice;
-import com.jarvis.app.auth.model.request.Login;
-import com.jarvis.app.auth.model.response.SocialMediaUserDetails;
-import com.jarvis.app.auth.service.security.UserSocialMediaService;
+import com.demon.auth.domain.entity.UserAccount;
+import com.demon.auth.domain.request.Login;
+import com.demon.auth.domain.response.SocialMediaUserDetails;
+import com.demon.auth.service.security.UserSocialMediaService;
 import com.jarvis.frmk.core.I18N;
 import com.jarvis.frmk.core.exception.HttpClientRequestException;
 import com.jarvis.frmk.core.util.ObjectUtil;

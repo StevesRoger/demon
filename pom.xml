@@ -11,7 +11,7 @@
     </parent>
 
     <groupId>com.demon.app</groupId>
-    <artifactId>demon-app</artifactId>
+    <artifactId>demon</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>Demon</name>
     <description>Demon project</description>
@@ -69,6 +69,12 @@
             <artifactId>h2</artifactId>
             <version>1.4.200</version>
             <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.10</version>
         </dependency>
 
     </dependencies>

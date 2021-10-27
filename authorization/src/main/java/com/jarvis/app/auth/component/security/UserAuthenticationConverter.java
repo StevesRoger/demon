@@ -1,7 +1,7 @@
 package com.jarvis.app.auth.component.security;
 
-import com.jarvis.app.auth.model.entity.UserAccount;
-import com.jarvis.app.auth.model.entity.UserPersonalInfo;
+import com.demon.auth.domain.entity.UserAccount;
+import com.demon.auth.domain.entity.UserPersonalInfo;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.provider.token.DefaultUserAuthenticationConverter;
 

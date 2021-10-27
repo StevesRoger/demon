@@ -1,6 +1,6 @@
 package com.jarvis.app.auth.converter;
 
-import com.jarvis.app.auth.model.entity.ref.OtpType;
+import com.demon.auth.domain.entity.ref.OtpType;
 import com.jarvis.frmk.hibernate.entity.converter.EntityRefConverter;
 
 import javax.persistence.Converter;

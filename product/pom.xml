@@ -5,11 +5,11 @@
 
 	<parent>
 		<groupId>com.demon.app</groupId>
-		<artifactId>demon-app</artifactId>
+		<artifactId>demon</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>demon-product</artifactId>
+	<artifactId>product</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Product</name>
 	<description>Product Service</description>

@@ -1,6 +1,6 @@
 package com.demon.auth.component;
 
-import com.jarvis.app.auth.controller.UserController;
+import com.demon.auth.controller.UserController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;

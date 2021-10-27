@@ -1,6 +1,6 @@
 package com.jarvis.app.auth.component.security;
 
-import com.jarvis.app.auth.model.response.AuthenticationAccessToken;
+import com.demon.auth.domain.response.AuthenticationAccessToken;
 import com.jarvis.frmk.security.oauth2.token.JarvisTokenEnhancer;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
