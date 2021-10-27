@@ -1,4 +1,4 @@
-package com.jarvis.app.auth.component;
+package com.demon.auth.component;
 
 import com.jarvis.app.auth.controller.UserController;
 import com.jarvis.frmk.core.component.AbstractResponseBodyAdvice;

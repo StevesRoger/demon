@@ -10,22 +10,29 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
-    <groupId>com.phstore.kh</groupId>
-    <artifactId>ph-store-backend</artifactId>
+    <groupId>com.demon.app</groupId>
+    <artifactId>demon-app</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>PHStore Backend</name>
-    <description>PHStore Backend</description>
+    <name>Demon</name>
+    <description>Demon project</description>
     <packaging>pom</packaging>
 
     <modules>
         <module>authorization</module>
         <module>gateway</module>
-        <module>webservice</module>
+        <module>product</module>
     </modules>
 
     <properties>
         <java.version>1.8</java.version>
-        <jarvis.frmk.version>0.0.1.RELEASE</jarvis.frmk.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss a</maven.build.timestamp.format>
+        <timestamp>${maven.build.timestamp}</timestamp>
+        <springframework.version>5.1.5.RELEASE</springframework.version>
+        <springframework.security.version>5.1.4.RELEASE</springframework.security.version>
+        <slf4j-log.version>1.7.25</slf4j-log.version>
+        <jackson.version>2.9.7</jackson.version>
     </properties>
 
     <dependencies>
@@ -42,6 +49,11 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
             <exclusions>
@@ -52,12 +64,12 @@
             </exclusions>
         </dependency>
 
-        <!-- hot swapping, disable cache for template, enable live reload -->
-       <!-- <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>1.4.200</version>
             <scope>runtime</scope>
-        </dependency>-->
+        </dependency>
 
     </dependencies>
 

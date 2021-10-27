@@ -1,16 +1,8 @@
-package com.jarvis.app.auth.component;
+package com.demon.auth.component;
 
 import com.jarvis.app.auth.controller.UserController;
-import com.jarvis.frmk.core.I18N;
-import com.jarvis.frmk.core.annotation.LogSlf4j;
-import com.jarvis.frmk.core.component.AbstractControllerAdviceHandler;
-import com.jarvis.frmk.core.exception.base.AnyException;
-import com.jarvis.frmk.core.exception.base.AnyRuntimeException;
-import com.jarvis.frmk.core.log.LoggerJ;
-import com.jarvis.frmk.core.model.http.response.ResponseJEntity;
-import com.jarvis.frmk.security.ISecurity;
-import com.jarvis.frmk.security.exception.AnyAuthenticationException;
-import com.jarvis.frmk.security.exception.UserAccountException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
@@ -18,6 +10,7 @@ import org.springframework.security.oauth2.common.exceptions.ClientAuthenticatio
 import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 /**
  * Created: kim chheng
@@ -26,20 +19,17 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  */
 
 @RestControllerAdvice(basePackageClasses = {UserController.class})
-public class ControllerExceptionAdvice extends AbstractControllerAdviceHandler {
+public class ControllerExceptionAdvice extends ResponseEntityExceptionHandler {
 
-    @LogSlf4j
-    private LoggerJ log;
+    private static final Logger LOG = LoggerFactory.getLogger(ControllerExceptionAdvice.class);
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleAnyException(Exception ex) {
-        log.error(ex.getMessage(), ex);
-        if (ex instanceof AnyRuntimeException)
+        LOG.error(ex.getMessage(), ex);
+        if (ex instanceof RuntimeException)
             return ((AnyRuntimeException) ex).getResponse().code("E400").toResponseEntity();
         else if (ex instanceof AnyException)
             return ((AnyException) ex).getResponse().code("E400").toResponseEntity();
-        else if (ex instanceof AnyAuthenticationException)
-            return ((AnyAuthenticationException) ex).getResponse().code("E400").toResponseEntity();
         else if (ex instanceof ClientAuthenticationException)
             return handleInvalidAccessToken((OAuth2Exception) ex);
         else if (ex instanceof RuntimeException)
@@ -49,7 +39,7 @@ public class ControllerExceptionAdvice extends AbstractControllerAdviceHandler {
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<?> handleAuthenticationException(AuthenticationException ex) {
-        log.error(ex.getMessage());
+        LOG.error(ex.getMessage());
         if (ex instanceof UserAccountException)
             return ((UserAccountException) ex).getResponse().toResponseEntity();
         return ResponseJEntity.fail(ISecurity.I18N_MESSAGE.getMessage("security.bad.credential"), HttpStatus.UNAUTHORIZED, ex.getMessage()).toResponseEntity();
