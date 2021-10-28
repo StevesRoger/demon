@@ -1,93 +1,51 @@
 package com.demon.auth.domain.entity;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-import com.jarvis.frmk.hibernate.entity.audit.AuditAutoGenerateEntity;
-import com.jarvis.frmk.hibernate.entity.base.RecyclableEntity;
-import com.jarvis.frmk.hibernate.entity.converter.AuthTypeConverter;
-import com.jarvis.frmk.hibernate.entity.converter.StatusConverter;
-import com.jarvis.frmk.hibernate.entity.ref.AuthType;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.persistence.*;
-import java.util.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.persistence.Transient;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
-/**
- * Created: kim chheng
- * Date: 23-Mar-2020 Mon
- * Time: 9:37 AM
- */
 @Entity
 @Table(name = "user_account")
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id")
-public class UserAccount extends AuditAutoGenerateEntity<Integer> implements RecyclableEntity, UserDetails {
+public class UserAccount extends AbstractEntity implements UserDetails {
 
     private static final long serialVersionUID = -1240427364614581089L;
 
     private String username;
     private String password;
-    private Boolean enabled = false;
+    private Boolean enabled = true;
     private Boolean locked = false;
     private String lockReason;
     private Integer failedAttempt;
     private Date expiryPassword;
     private Date lastLogin;
     private Date lastLogout;
-    private Status status;
-    private UserPersonalInfo personalInfo;
+    private Status status = Status.ACTIVE;
+    private Integer customerId;
     private Set<UserRole> roles = new HashSet<>();
 
-    @JsonManagedReference
-    @OneToOne(mappedBy = "userAccount", cascade = CascadeType.ALL)
-    public UserPersonalInfo getPersonalInfo() {
-        return personalInfo;
-    }
-
-    public void setPersonalInfo(UserPersonalInfo personalInfo) {
-        this.personalInfo = personalInfo;
-    }
-
-    @OneToMany(mappedBy = "userAccount", cascade = CascadeType.ALL)
-    public Set<UserDevice> getDevices() {
-        return devices == null ? new HashSet<>() : devices;
-    }
-
-    public void setDevices(Set<UserDevice> devices) {
-        this.devices = devices;
-    }
-
-    @OneToOne(cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "pwd_policy_id", referencedColumnName = "id")
-    public PasswordPolicy getPasswordPolicy() {
-        return passwordPolicy;
-    }
-
-    public void setPasswordPolicy(PasswordPolicy passwordPolicy) {
-        this.passwordPolicy = passwordPolicy;
-    }
-
-    @Convert(converter = AuthTypeConverter.class)
-    @Column(name = "auth_type", length = 20)
-    public AuthType getAuthType() {
-        return authType;
-    }
-
-    public void setAuthType(AuthType authType) {
-        this.authType = authType;
-    }
-
-    @Convert(converter = StatusConverter.class)
-    @Column(name = "status", length = 20)
-    @Override
+    @Column(name = "status", length = 20, nullable = false)
+    @Enumerated(value = EnumType.STRING)
     public Status getStatus() {
         return status;
     }
 
-    @Override
     public void setStatus(Status status) {
         this.status = status;
     }
@@ -190,6 +148,15 @@ public class UserAccount extends AuditAutoGenerateEntity<Integer> implements Rec
         this.failedAttempt = failedAttempt;
     }
 
+    @Column(name = "customer_id", nullable = false)
+    public Integer getCustomerId() {
+        return customerId;
+    }
+
+    public void setCustomerId(Integer customerId) {
+        this.customerId = customerId;
+    }
+
     @Transient
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -218,16 +185,6 @@ public class UserAccount extends AuditAutoGenerateEntity<Integer> implements Rec
     @Override
     public boolean isEnabled() {
         return getEnabled();
-    }
-
-    @Override
-    public int hashCode() {
-        return super.hashCode() + Objects.hash(username);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return super.equals(obj) && equals(obj, "username");
     }
 
     @Override

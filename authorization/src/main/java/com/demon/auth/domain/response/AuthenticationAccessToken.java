@@ -5,11 +5,6 @@ import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 
-/**
- * Created: chheng
- * Date: 16-Oct-2021 Sat
- * Time: 22:26
- */
 public class AuthenticationAccessToken extends DefaultOAuth2AccessToken {
 
     private OAuth2Authentication authentication;

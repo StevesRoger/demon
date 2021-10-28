@@ -12,18 +12,12 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-/**
- * Created: kim chheng
- * Date: 29-Sep-2019 Sun
- * Time: 1:33 PM
- */
-
 @RestControllerAdvice(basePackageClasses = {UserController.class})
 public class ControllerExceptionAdvice extends ResponseEntityExceptionHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(ControllerExceptionAdvice.class);
 
-    @ExceptionHandler(Exception.class)
+   /* @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleAnyException(Exception ex) {
         LOG.error(ex.getMessage(), ex);
         if (ex instanceof RuntimeException)
@@ -55,5 +49,5 @@ public class ControllerExceptionAdvice extends ResponseEntityExceptionHandler {
         else if (error.contains("User account is locked"))
             message = I18N.getMessage("error.user.locked");
         return buildResponse(ex.getMessage(), message, HttpStatus.UNAUTHORIZED).code("OA2400").toResponseEntity();
-    }
+    }*/
 }

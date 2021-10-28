@@ -1,6 +1,6 @@
 package com.demon.auth.service;
 
-import com.jarvis.frmk.security.oauth2.IOAuth2;
+import com.demon.auth.component.Const;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerEndpointsConfiguration;
@@ -11,8 +11,6 @@ import org.springframework.security.oauth2.provider.token.ConsumerTokenServices;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -22,34 +20,19 @@ public class OAuth2Service {
     @Autowired
     private AuthorizationServerEndpointsConfiguration oauth2Config;
 
-
     public OAuth2AccessToken getAccessToken(Map<String, String> parameter) {
-        return getEndpointConfigure().getTokenGranter().grant(IOAuth2.RESOURCE_OWNER, createTokenRequest(parameter));
+        return getEndpointConfigure().getTokenGranter().grant(Const.RESOURCE_OWNER, createTokenRequest(parameter));
     }
 
     public OAuth2AccessToken refreshToken(Map<String, String> parameter) {
         TokenRequest tokenRequest = createTokenRequest(parameter);
-        return getEndpointConfigure().getTokenServices().refreshAccessToken(parameter.get(IOAuth2.REFRESH_TOKEN), tokenRequest);
+        return getEndpointConfigure().getTokenServices().refreshAccessToken(parameter.get(Const.REFRESH_TOKEN), tokenRequest);
     }
 
     public Optional<OAuth2AccessToken> revokeToken(String token) {
         Optional<OAuth2AccessToken> optAuth = Optional.ofNullable(getTokenStore().readAccessToken(token));
         optAuth.ifPresent(obj -> getTokenService().revokeToken(obj.getValue()));
         return optAuth;
-    }
-
-    public List<OAuth2AccessToken> revokeUserToken(String clientId, String username) {
-        Collection<OAuth2AccessToken> tokens = listTokens(clientId, username);
-        tokens.forEach(token -> getTokenService().revokeToken(token.getValue()));
-        return (List<OAuth2AccessToken>) tokens;
-    }
-
-    public Collection<OAuth2AccessToken> listTokens(String clientId) {
-        return getTokenStore().findTokensByClientId(clientId);
-    }
-
-    public Collection<OAuth2AccessToken> listTokens(String clientId, String username) {
-        return getTokenStore().findTokensByClientIdAndUserName(clientId, username);
     }
 
     private ConsumerTokenServices getTokenService() {
@@ -65,7 +48,7 @@ public class OAuth2Service {
     }
 
     private TokenRequest createTokenRequest(Map<String, String> parameter) {
-        ClientDetails clientDetails = getClientDetail(parameter.get(IOAuth2.CLIENT_ID));
+        ClientDetails clientDetails = getClientDetail(parameter.get(Const.CLIENT_ID));
         return getEndpointConfigure().getOAuth2RequestFactory().createTokenRequest(parameter, clientDetails);
     }
 

@@ -1,28 +1,16 @@
 package com.demon.auth.domain.entity;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-import com.jarvis.frmk.hibernate.entity.audit.AuditAutoGenerateEntity;
-import com.jarvis.frmk.security.ISecurity;
+import com.demon.auth.component.Const;
 import org.springframework.security.core.GrantedAuthority;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 import javax.persistence.Transient;
-import java.util.Objects;
 
-/**
- * Created: kim chheng
- * Date: 23-Mar-2020 Mon
- * Time: 9:37 AM
- */
 @Entity
 @Table(name = "user_role")
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id")
-public class UserRole extends AuditAutoGenerateEntity<Integer> implements GrantedAuthority {
+public class UserRole extends AbstractEntity implements GrantedAuthority {
 
     private static final long serialVersionUID = -6922310965036631952L;
 
@@ -58,17 +46,7 @@ public class UserRole extends AuditAutoGenerateEntity<Integer> implements Grante
     @Transient
     @Override
     public String getAuthority() {
-        return role == null ? null : role.startsWith(ISecurity.SPRING_PREF_ROLE) ? role : ISecurity.SPRING_PREF_ROLE + role;
-    }
-
-    @Override
-    public int hashCode() {
-        return super.hashCode() + Objects.hash(role);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return super.equals(obj) && equals(obj, "role");
+        return role == null ? null : role.startsWith(Const.SPRING_PREF_ROLE) ? role : Const.SPRING_PREF_ROLE + role;
     }
 
     @Override

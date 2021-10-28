@@ -1,26 +1,12 @@
 package com.demon.auth.domain.request;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.demon.auth.domain.entity.UserAccount;
-import com.demon.auth.domain.entity.UserPersonalInfo;
-import com.jarvis.frmk.core.ICore;
-import com.jarvis.frmk.core.annotation.ValidEmail;
-import com.jarvis.frmk.core.model.base.SerializeCloneable;
-import com.jarvis.frmk.core.util.StringUtil;
+import com.demon.auth.domain.SerializeCloneable;
 
-import javax.validation.constraints.NotEmpty;
-import java.util.Date;
-
-/**
- * Created: KimChheng
- * Date: 13-Oct-2019 Sun
- * Time: 10:29 PM
- */
 public class UserRegister implements SerializeCloneable {
 
     private static final long serialVersionUID = -8283860787575626748L;
 
-    @NotEmpty
+    /*@NotEmpty
     private String password;
     private String userName;
     private String pwdPolicyId;
@@ -167,5 +153,5 @@ public class UserRegister implements SerializeCloneable {
         device.setModel(this.device.getModel());
         device.setPlatform(this.device.getPlatform());
         return device;
-    }
+    }*/
 }

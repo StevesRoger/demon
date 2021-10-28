@@ -1,6 +1,6 @@
 package com.demon.auth.config;
 
-import com.demon.auth.service.security.UserAccountDetailsService;
+import com.demon.auth.service.UserAccountDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
@@ -13,13 +13,9 @@ import org.springframework.security.oauth2.config.annotation.web.configurers.Aut
 import org.springframework.security.oauth2.provider.ClientDetailsService;
 import org.springframework.security.oauth2.provider.approval.ApprovalStore;
 import org.springframework.security.oauth2.provider.code.AuthorizationCodeServices;
+import org.springframework.security.oauth2.provider.token.TokenEnhancer;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 
-/**
- * Created: KimChheng
- * Date: 04-Oct-2019 Fri
- * Time: 10:32 PM
- */
 @Configuration
 @EnableAuthorizationServer
 public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdapter {
@@ -41,6 +37,9 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     private ApprovalStore approvalStore;
 
     @Autowired
+    private TokenEnhancer tokenEnhancer;
+
+    @Autowired
     private UserAccountDetailsService userDetailService;
 
     @Override
@@ -57,6 +56,7 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
         endpoints.reuseRefreshTokens(false)
                 .tokenStore(tokenStore)
+                .tokenEnhancer(tokenEnhancer)
                 .userDetailsService(userDetailService)
                 .authenticationManager(authenticationManager)
                 .approvalStore(approvalStore)
