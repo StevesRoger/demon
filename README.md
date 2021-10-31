@@ -1,6 +1,6 @@
 # Demo project
-This is a demon project developed using spring boot and maven dependency management
-with java 8 as a microservices.
+This is a demon project developed using spring boot and maven as a dependency management
+with java 8 as microservices.
 ## Dependencies
 
 * Spring boot parent version 2.1.3.RELEASE
@@ -58,7 +58,7 @@ client_id = mobile_app
 client_secret = iIRSk4KPVR45/WadwgciZ+YGugrY1iJJVx4Kshx1RthDpwW5U3gsHvl6cQYntFKTqFcnikjdCxdZ0obA85cYTD3RVP09UDFC01z77Cp9q78eQo27WZsblmpJVhmWc+iA7lb47bQ7vTZt3q+jAbzKUSUctvxDasA+Sk9WFIgI/eEtz7t4V4hihyaaobxLdFyU1PhiLCgraNydr/xEe2qOhNrVuMB3NTSV31TmeQEELf0q+y0oXwe6HDgDKPO7azmJTz/Ro+1Ei3UZHgNOm7H5a+uPUHdhTsChTqurw0L4wkbMI4DcyeKnaXcsmOtTWq3DcOxHCRiTkkGSIpoyqTOF2Q==
 ```
 
-#### Self register
+### Self register
 Use client id and secret as basic authorization
 ```sh
 curl --request POST \
@@ -76,7 +76,7 @@ curl --request POST \
 Success response
 {"code":"S200","message":"Successful","data":{"customer_id":4}}
 ```
-#### Self register with photo upload
+### Self register with photo upload
 Use client id and secret as basic authorization
 ```sh
 curl --request POST \
@@ -90,7 +90,7 @@ Success response
 {"code":"S200","message":"Successful","data":{"customer_id":4}}
 ```
 
-#### Login
+### Login
 Use client id and secret as basic authorization
 ```sh
 curl --request POST \
@@ -106,7 +106,7 @@ Success response
 {"code":"S200","message":"Successful","data":{"access_token":"c83c8f45-11e2-479a-8210-ab5f0d1f7f22","token_type":"bearer","refresh_token":"16d0a17f-9f5a-4dbe-bd80-03a58e2a5b64","expires_in":3599,"scope":"read write","refresh_token_expires_in":3799,"refresh_token_expires_date":"2021-10-31 16:13:44","expires_date":"2021-10-31 16:10:24","issued_at":"2021-10-31 15:10:24"}}
 ```
 
-#### View customer info
+### View customer info
 Use access token as authorization
 ```sh
 curl --request GET \
@@ -114,7 +114,7 @@ curl --request GET \
   --header 'Authorization: Bearer c83c8f45-11e2-479a-8210-ab5f0d1f7f22'
 ```
 
-#### View customer profile picture
+### View customer profile picture
 Use access token as authorization
 ```sh
 curl --request GET \
@@ -122,7 +122,7 @@ curl --request GET \
   --header 'Authorization: Bearer b4ff1817-a97a-400d-af02-a835f254f666'
 ```
 
-#### Browse all available products
+### Browse all available products
 Use access token as authorization
 ```sh
 curl --request GET \
@@ -130,7 +130,7 @@ curl --request GET \
   --header 'Authorization: Bearer 76b65958-2ad3-46fc-ba9d-14f081e46574'
 ```
 
-#### Purchase the product
+### Purchase the product
 Use access token as authorization
 ```sh
 curl --request GET \
@@ -138,7 +138,7 @@ curl --request GET \
   --header 'Authorization: Bearer 39bdb868-737c-4c13-b852-f4c163b48cb9'
 ```
 
-#### View purchased policies
+### View purchased policies
 Use access token as authorization
 ```sh
 curl --request GET \
