@@ -1,8 +1,16 @@
 # Demo project
-This is a demon project developed using spring boot and maven as a dependency management
+This is a demo project developed using spring boot and maven as a dependency management
 with java 8 as microservices.
-## Dependencies
+## Description
+This demo project have 4 services 
+- **API Gateway service** handle every request from the client and route to specific service
+base on context path of the url
+- **Authorization service** handle the authentication access token and verify token for every resource service
+- **Product service** handle business logic about product
+- **Customer service** handle business logic about customer
 
+Using in memory database H2, Hibernate JPA and OAuth2 for security
+## Dependencies
 * Spring boot parent version 2.1.3.RELEASE
 * Spring security oauth2 version 2.3.6.RELEASE
 * Hibernate core version 5.3.7.Final
@@ -48,14 +56,18 @@ mvn clean install -DskipTests -pl customer spring-boot:stop
 ```
 ## Usage
 ### Checking app is deployed sucessfullly
-```sh
-Open your browser and type localhost:8080 to visit eureka dashboard and all services
-```
-### Client id and secret
+
+##### [Eureka](localhost:8080) dashboard
+
+### Default client id and secret
 ##### Note: Password and secret are encrypt with RSA public key before send to server 
+##### [Encryption page](localhost:8080/auth) for encryption password
 ```
 client_id = mobile_app
 client_secret = iIRSk4KPVR45/WadwgciZ+YGugrY1iJJVx4Kshx1RthDpwW5U3gsHvl6cQYntFKTqFcnikjdCxdZ0obA85cYTD3RVP09UDFC01z77Cp9q78eQo27WZsblmpJVhmWc+iA7lb47bQ7vTZt3q+jAbzKUSUctvxDasA+Sk9WFIgI/eEtz7t4V4hihyaaobxLdFyU1PhiLCgraNydr/xEe2qOhNrVuMB3NTSV31TmeQEELf0q+y0oXwe6HDgDKPO7azmJTz/Ro+1Ei3UZHgNOm7H5a+uPUHdhTsChTqurw0L4wkbMI4DcyeKnaXcsmOtTWq3DcOxHCRiTkkGSIpoyqTOF2Q==
+
+client_id = web_app
+client_secret = U6iYwpg32Lds4dZCCnRVvHG8I4wRLk6v+k2FgfC4bFQltRJg+JUIH7/3aaL6YB0KyldYY+5RzjS/uF31VDUhHNy3xTKkZYTyNgw8greeB9Y6ZjtOqvM9eYWgYRVJLrNevsDgVqT+R6tYFlc0wMDHny3yw90uyCI+O3o3eMTQjoT/qDWJrxLhshMBRqs6x4pDrG/dBFvCbpFxjQXje13lX9ZrdJ802f9HJGRyLqZxnYLHm6qSBHxSON60Cxdg92/pRDm/SVWbTAjQc7BeyiBR4VbvK0p0CUaAdY8nf+8tdDaZFtHvXE/sS2Q5E4Ox6Ms8tjsGuTLxirKKLWhdgnGFUw==
 ```
 
 ### Self register
@@ -120,6 +132,30 @@ Use access token as authorization
 curl --request GET \
   --url http://localhost:8080/customer/photo \
   --header 'Authorization: Bearer b4ff1817-a97a-400d-af02-a835f254f666'
+```
+
+### Update customer info
+Use access token as authorization
+```sh
+curl --request PUT \
+  --url http://localhost:8080/customer/update \
+  --header 'Authorization: Bearer b4ff1817-a97a-400d-af02-a835f254f666' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"name": "The fifth fang",
+	"phone": "099878741",
+	"email": "test101@gmail.com"
+}'
+```
+
+### Update customer profile picture
+Use access token as authorization
+```sh
+curl --request PUT \
+  --url http://localhost:8080/customer/upload \
+  --header 'Authorization: Bearer b4ff1817-a97a-400d-af02-a835f254f666' \
+  --header 'Content-Type: multipart/form-data; boundary=---011000010111000001101001' \
+  --form 'photo=@C:\Users\KimChheng\Documents\agito-formless.PNG'
 ```
 
 ### Browse all available products
