@@ -1,6 +1,7 @@
 package com.demo.product.domain.entity;
 
 import com.demo.product.domain.SerializeCloneable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -26,6 +27,7 @@ public abstract class AbstractEntity implements SerializeCloneable {
         this.id = id;
     }
 
+    @JsonIgnore
     @Column(name = "created_by", length = 50)
     public String getCreatedBy() {
         return createdBy;
@@ -35,6 +37,7 @@ public abstract class AbstractEntity implements SerializeCloneable {
         this.createdBy = createdBy;
     }
 
+    @JsonIgnore
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created_date")
     public Date getCreatedDate() {
@@ -45,6 +48,7 @@ public abstract class AbstractEntity implements SerializeCloneable {
         this.createdDate = createdDate;
     }
 
+    @JsonIgnore
     @Column(name = "modified_by", length = 50)
     public String getModifiedBy() {
         return modifiedBy;
@@ -54,6 +58,7 @@ public abstract class AbstractEntity implements SerializeCloneable {
         this.modifiedBy = modifiedBy;
     }
 
+    @JsonIgnore
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "modified_date")
     public Date getModifiedDate() {
@@ -70,7 +75,7 @@ public abstract class AbstractEntity implements SerializeCloneable {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        return obj instanceof AbstractEntity && ((AbstractEntity) obj).getId().equals(id);
+    public boolean equals(Object that) {
+        return that instanceof AbstractEntity && ((AbstractEntity) that).getId().equals(id);
     }
 }

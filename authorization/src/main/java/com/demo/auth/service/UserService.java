@@ -6,16 +6,17 @@ import com.demo.auth.domain.entity.Status;
 import com.demo.auth.domain.entity.UserAccount;
 import com.demo.auth.domain.entity.UserRole;
 import com.demo.auth.domain.request.Login;
+import com.demo.auth.domain.request.Method;
 import com.demo.auth.domain.request.Register;
 import com.demo.auth.domain.response.AuthenticationAccessToken;
 import com.demo.auth.domain.response.ResponseBody;
 import com.demo.auth.repository.UserRepository;
 import com.demo.auth.repository.UserRoleRepository;
 import com.demo.auth.util.SecurityUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.stereotype.Service;
@@ -62,12 +63,10 @@ public class UserService {
     public ResponseEntity<?> logout(String token) {
         LOG.info("logout user revoke token:{}", token);
         Optional<OAuth2AccessToken> otpAccessToken = auth2Service.revokeToken(token);
-        if (otpAccessToken.isPresent()) {
-            UserAccount userAccount = (UserAccount) ((AuthenticationAccessToken) otpAccessToken.get()).getPrincipal();
-            userAccount.setLastLogout(new Date());
-            return ResponseEntity.ok(new ResponseBody("Successful"));
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseBody.fail("E400", "Token not found"));
+        if (!otpAccessToken.isPresent()) throw new RuntimeException("Token not found");
+        UserAccount userAccount = (UserAccount) ((AuthenticationAccessToken) otpAccessToken.get()).getPrincipal();
+        userAccount.setLastLogout(new Date());
+        return ResponseEntity.ok(new ResponseBody("Successful"));
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -87,16 +86,28 @@ public class UserService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public ResponseEntity<?> registerUserAccount(Register request) throws GeneralSecurityException, UnsupportedEncodingException {
+    public ResponseEntity<?> createOrUpdateUserAccount(Register request) throws GeneralSecurityException, UnsupportedEncodingException {
+        if (request.getCustomerId() == null || request.getCustomerId() < 0)
+            throw new RuntimeException("Customer id is required");
+        Optional<UserAccount> optUserAccount = userRepo.findByCustomerIdAndStatus(request.getCustomerId(), Status.ACTIVE);
+        UserAccount userAccount = optUserAccount.orElse(new UserAccount());
+        if (Method.CREATE.equals(request.getMethod())) {
+            if (StringUtils.isEmpty(request.getPassword()))
+                throw new RuntimeException("Password is empty");
+            else if (StringUtils.isEmpty(request.getUsername()))
+                throw new RuntimeException("Username is empty");
+            else if (request.getUsername().equals(userAccount.getUsername()))
+                throw new RuntimeException("User name " + request.getUsername() + " already exist");
+        }
         Map<String, Object> data = new HashMap<>();
-        Optional<UserAccount> optUserAccount = userRepo.findByUsernameAndStatus(request.getUsername(), Status.ACTIVE);
-        if (optUserAccount.isPresent())
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseBody.fail("E400", "User name " + request.getUsername() + " already exist"));
-        UserRole role = roleRepo.findByRole(request.getRole()).orElseThrow(() -> new RuntimeException("Role " + request.getRole() + " not found"));
-        String rawPwd = pwdEncoder.decryptText(request.getPassword());
-        UserAccount userAccount = new UserAccount();
-        userAccount.setUsername(request.getUsername());
-        userAccount.setPassword(pwdEncoder.encode(rawPwd));
+        String roleName = StringUtils.isEmpty(request.getRole()) ? "USER" : request.getRole();
+        UserRole role = roleRepo.findByRole(roleName).orElseThrow(() -> new RuntimeException("Role " + request.getRole() + " not found"));
+        if (StringUtils.isNotEmpty(request.getPassword())) {
+            String rawPwd = pwdEncoder.decryptText(request.getPassword());
+            userAccount.setPassword(pwdEncoder.encode(rawPwd));
+        }
+        if (StringUtils.isNotEmpty(request.getUsername()))
+            userAccount.setUsername(request.getUsername());
         userAccount.setCustomerId(request.getCustomerId());
         userAccount.setCreatedBy(SecurityUtil.getAuthenticateUsername());
         userAccount.getRoles().add(role);

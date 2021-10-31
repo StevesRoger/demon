@@ -1,5 +1,6 @@
 package com.demo.auth.config;
 
+import com.demo.auth.component.CustomUserAuthenticationConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
@@ -10,6 +11,7 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.E
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
 import org.springframework.security.oauth2.provider.ClientDetailsService;
+import org.springframework.security.oauth2.provider.token.DefaultAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.TokenEnhancer;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 
@@ -47,5 +49,7 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
                 .tokenStore(tokenStore)
                 .tokenEnhancer(tokenEnhancer)
                 .authenticationManager(authenticationManager);
+        DefaultAccessTokenConverter accessTokenConverter = (DefaultAccessTokenConverter) endpoints.getAccessTokenConverter();
+        accessTokenConverter.setUserTokenConverter(new CustomUserAuthenticationConverter());
     }
 }

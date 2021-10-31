@@ -4,24 +4,24 @@ package com.demo.auth.domain.request;
 import com.demo.auth.domain.SerializeCloneable;
 
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 
 public class Register implements SerializeCloneable {
 
     private static final long serialVersionUID = 1660457609872979370L;
 
-    private int customerId;
-    @NotEmpty
+    @NotNull
+    private Integer customerId;
     private String username;
-    @NotEmpty
     private String password;
-    @NotEmpty
+    private Method method;
     private String role;
 
-    public int getCustomerId() {
+    public Integer getCustomerId() {
         return customerId;
     }
 
-    public void setCustomerId(int customerId) {
+    public void setCustomerId(Integer customerId) {
         this.customerId = customerId;
     }
 
@@ -47,5 +47,13 @@ public class Register implements SerializeCloneable {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public Method getMethod() {
+        return method;
+    }
+
+    public void setMethod(Method method) {
+        this.method = method;
     }
 }

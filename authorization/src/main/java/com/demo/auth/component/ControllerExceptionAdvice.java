@@ -25,7 +25,9 @@ public class ControllerExceptionAdvice extends ResponseEntityExceptionHandler {
             return handleInvalidAccessToken((OAuth2Exception) ex);
         else if (ex instanceof AuthenticationException)
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseBody.fail("E401", ex.getMessage()));
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseBody.fail("E500", "Unexpected error"));
+        else if (ex instanceof RuntimeException)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseBody.fail("E400", ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseBody.fail("E500", "Unexpected error"));
     }
 
     protected ResponseEntity<?> handleInvalidAccessToken(OAuth2Exception ex) {

@@ -1,5 +1,6 @@
 package com.demo.auth;
 
+import com.demo.auth.component.RsaBCryptPasswordEncoder;
 import com.demo.auth.domain.entity.UserAccount;
 import com.demo.auth.domain.entity.UserRole;
 import com.demo.auth.repository.UserRepository;
@@ -17,7 +18,7 @@ public class AuthApp implements CommandLineRunner {
     private UserRepository repository;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    private RsaBCryptPasswordEncoder passwordEncoder;
 
     @Transactional(rollbackFor = Exception.class)
     @Override

@@ -70,7 +70,7 @@ public abstract class AbstractEntity implements SerializeCloneable {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        return obj instanceof AbstractEntity && ((AbstractEntity) obj).getId().equals(id);
+    public boolean equals(Object that) {
+        return that instanceof AbstractEntity && ((AbstractEntity) that).getId().equals(id);
     }
 }

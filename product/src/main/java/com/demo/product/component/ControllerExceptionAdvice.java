@@ -26,11 +26,12 @@ public class ControllerExceptionAdvice extends ResponseEntityExceptionHandler {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseBody.fail("E401", "Unauthorized access"));
         else if (ex instanceof AccessDeniedException)
             return handleAccessDeniedException((AccessDeniedException) ex);
-        if (ex instanceof RestClientResponseException) {
+        else if (ex instanceof RestClientResponseException) {
             RestClientResponseException e = (RestClientResponseException) ex;
             return ResponseEntity.status(e.getRawStatusCode()).body(new JSONObject(e.getResponseBodyAsString()).toMap());
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseBody.fail("E500", "Unexpected error"));
+        } else if (ex instanceof RuntimeException)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseBody.fail("E400", ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseBody.fail("E500", "Unexpected error"));
     }
 
     protected ResponseEntity<?> handleAccessDeniedException(AccessDeniedException ex) {

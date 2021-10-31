@@ -23,7 +23,7 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
                 .and().csrf().disable()
                 .anonymous().disable()
                 .authorizeRequests()
-                .antMatchers("/api/**").hasRole("USER")
+                .anyRequest().hasRole("USER")
                 .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
 }

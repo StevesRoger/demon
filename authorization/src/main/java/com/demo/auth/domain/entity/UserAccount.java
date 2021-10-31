@@ -25,9 +25,9 @@ public class UserAccount extends AbstractEntity implements UserDetails {
     private Date lastLogout;
     private Status status = Status.ACTIVE;
     private Integer customerId;
-    private Set<UserRole> roles = new HashSet<>();
+    private Set<UserRole> roles;
 
-    @Column(name = "status", length = 20, nullable = false)
+    @Column(name = "status", nullable = false)
     @Enumerated(value = EnumType.STRING)
     public Status getStatus() {
         return status;
@@ -42,7 +42,8 @@ public class UserAccount extends AbstractEntity implements UserDetails {
             joinColumns = {@JoinColumn(name = "user_id")},
             inverseJoinColumns = {@JoinColumn(name = "role_id")})
     public Set<UserRole> getRoles() {
-        return roles == null ? new HashSet<>() : roles;
+        if (roles == null) roles = new HashSet<>();
+        return roles;
     }
 
     public void setRoles(Set<UserRole> profiles) {
