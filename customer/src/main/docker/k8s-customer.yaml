@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: customer-svc
+  namespace: demo
+spec:
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: customer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customer
+  namespace: demo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: customer
+  template:
+    metadata:
+      labels:
+        app: customer
+    spec:
+      containers:
+      - name: customer
+        image: customer:0.0.1.SNAPSHOT
+        ports:
+        - containerPort: 8080

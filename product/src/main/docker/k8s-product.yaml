@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-svc
+  namespace: demo
+spec:
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: product
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product
+  namespace: demo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: product
+  template:
+    metadata:
+      labels:
+        app: product
+    spec:
+      containers:
+      - name: product
+        image: product:0.0.1.SNAPSHOT
+        ports:
+        - containerPort: 8080
