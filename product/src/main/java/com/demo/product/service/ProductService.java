@@ -56,4 +56,9 @@ public class ProductService {
         data.put("policies", policies);
         return ResponseEntity.ok(new ResponseBody("Successful", data));
     }
+
+    public static void main(String[] args) {
+        String a = "#k8snode2#testing#product-655cb87-nsjwg";
+        a.split("#");
+    }
 }

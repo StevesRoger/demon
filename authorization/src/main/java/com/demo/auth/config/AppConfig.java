@@ -20,6 +20,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import javax.sql.DataSource;
 import java.security.PrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -39,6 +41,11 @@ public class AppConfig {
         passwordEncoder.setPublicKey(publicKey);
         return passwordEncoder;
     }
+
+    /*@Bean
+    public Sampler sampler(){
+        return Sampler.ALWAYS_SAMPLE;
+    }*/
 
     @Bean
     public TokenEnhancer tokenEnhancer() {

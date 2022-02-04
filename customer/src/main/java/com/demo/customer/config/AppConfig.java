@@ -1,6 +1,7 @@
 package com.demo.customer.config;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -8,6 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.provider.token.DefaultAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.DefaultUserAuthenticationConverter;
 import org.springframework.security.oauth2.provider.token.RemoteTokenServices;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 
@@ -37,10 +39,18 @@ public class AppConfig {
             }
         });
         RemoteTokenServices tokenServices = new RemoteTokenServices();
+        tokenServices.setRestTemplate(getRestTemplate());
         tokenServices.setCheckTokenEndpointUrl(checkTokenUrl);
         tokenServices.setClientId(clientId);
         tokenServices.setClientSecret(clientSecret);
         tokenServices.setAccessTokenConverter(tokenConverter);
         return tokenServices;
     }
+
+    @Bean
+    @LoadBalanced
+    public RestTemplate getRestTemplate() {
+        return new RestTemplate();
+    }
+
 }

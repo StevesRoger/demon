@@ -1,6 +1,7 @@
 package com.demo.customer.config;
 
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -39,6 +40,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Value("${oauth2.remote.client-secret}")
     private String clientSecret;
 
+    @Autowired
+    private RestTemplate restTemplate;
+
     @Override
     public void configure(WebSecurity web) throws Exception {
         web.ignoring().mvcMatchers("/actuator/**");
@@ -70,7 +74,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
                     form.add("raw", rawPassword.toString());
                     form.add("encode", encodedPassword);
-                    ResponseEntity<Map> response = new RestTemplate().postForEntity(authBaseUrl + "/system/check_password", new HttpEntity<>(form, header), Map.class);
+                    ResponseEntity<Map> response = restTemplate.postForEntity(authBaseUrl + "/system/check_password", new HttpEntity<>(form, header), Map.class);
                     return HttpStatus.OK.equals(response.getStatusCode());
                 } catch (RestClientException e) {
                     return false;
@@ -81,7 +85,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             try {
                 HttpHeaders header = new HttpHeaders();
                 header.setBasicAuth(clientId, clientSecret);
-                Map<String, Object> body = new RestTemplate().exchange(authBaseUrl + "/system/" + username, HttpMethod.GET, new HttpEntity<>(header), Map.class).getBody();
+                Map<String, Object> body = restTemplate.exchange(authBaseUrl + "/system/" + username, HttpMethod.GET, new HttpEntity<>(header), Map.class).getBody();
                 List<SimpleGrantedAuthority> authorities = ((List<String>) body.get("authorities"))
                         .stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
                 return new User(username, body.get("password").toString(), authorities);

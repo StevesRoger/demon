@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <springProperty scope="context" name="appName" source="spring.application.name"/>
+
+    <property name="LOG_DIR" value="${LOG_DIR:-D:/home/logs}"/>
+
+    <property name="LOG_NAME" value="${LOG_NAME:-${appName}}"/>
+
+    <!-- Appender to console -->
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <charset>utf-8</charset>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <springProfile name="${PROFILE:-deploy}">
+        <!-- Use shutdownHook so that we can close gracefully and finish the log drain -->
+        <shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook"/>
+        <!-- Appender to log file -->
+        <appender name="log-file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_DIR}/${LOG_NAME}.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>
+                    ${LOG_DIR}/archived/${LOG_NAME}-%d{yyyy-MM-dd}.%i.log
+                </fileNamePattern>
+                <!-- each archived file, size max 10MB -->
+                <maxFileSize>5MB</maxFileSize>
+                <!-- total size of all archive files, if total size > 20GB,
+                    it will delete old archived file -->
+                <totalSizeCap>20GB</totalSizeCap>
+                <!-- 60 days to keep -->
+                <maxHistory>60</maxHistory>
+            </rollingPolicy>
+            <encoder>
+                <charset>utf-8</charset>
+                <!--<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level ${PID} [%t] %logger{36}: %msg%n</pattern>-->
+                <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            </encoder>
+        </appender>
+
+        <appender name="async-log-file" class="ch.qos.logback.classic.AsyncAppender">
+            <queueSize>512</queueSize>
+            <appender-ref ref="log-file"/>
+        </appender>
+
+        <!-- Appender to log stash -->
+        <appender name="log-stash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+            <param name="Encoding" value="UTF-8"/>
+            <destination>${LOG_STASH}</destination>
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <customFields>{"pid":"${PID}"}</customFields>
+                <shortenedLoggerNameLength>36</shortenedLoggerNameLength>
+                <!--<timeZone>Asia/Phnom_Penh</timeZone>-->
+                <!--<timestampPattern>yyyy-MM-dd HH:mm:ss.SSS</timestampPattern>-->
+                <timeZone>Asia/Bangkok</timeZone>
+            </encoder>
+        </appender>
+
+        <root level="DEBUG">
+            <appender-ref ref="log-stash"/>
+            <appender-ref ref="async-log-file"/>
+        </root>
+
+    </springProfile>
+
+    <!--<logger name="com.demo" level="DEBUG" additivity="false">
+        <appender-ref ref="console"/>
+    </logger>-->
+
+    <root level="DEBUG">
+        <appender-ref ref="console"/>
+    </root>
+
+</configuration>

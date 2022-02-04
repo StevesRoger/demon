@@ -12,6 +12,7 @@
 	<artifactId>product</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Product</name>
+	<packaging>jar</packaging>
 	<description>Product Service</description>
 
 	<dependencies>
@@ -22,30 +23,57 @@
 			<version>2.3.6.RELEASE</version>
 		</dependency>
 
-		<dependency>
+	<!--	<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 			<version>2.1.3.RELEASE</version>
 		</dependency>
-
+-->
 	</dependencies>
 
 	<build>
+
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+			<resource>
+				<directory>src/main/docker</directory>
+				<filtering>true</filtering>
+				<targetPath>${project.build.directory}</targetPath>
+			</resource>
+		</resources>
+
 		<plugins>
+
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<configuration>
-					<skip>false</skip>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>repackage</goal>
-						</goals>
-					</execution>
-				</executions>
 			</plugin>
+
+			<!--<plugin>
+				<groupId>io.fabric8</groupId>
+				<artifactId>docker-maven-plugin</artifactId>
+				<version>0.37.0</version>
+				<configuration>
+					<dockerHost>tcp://192.168.56.1:2375</dockerHost>
+					<verbose>true</verbose>
+					<images>
+						<image>
+							<name>${project.artifactId}</name>
+							<alias>${project.artifactId}</alias>
+							<build>
+								<dockerFileDir>${project.build.directory}</dockerFileDir>
+								<tags>
+									<tag>latest</tag>
+								</tags>
+							</build>
+						</image>
+					</images>
+				</configuration>
+			</plugin>-->
+
 		</plugins>
 	</build>
 
